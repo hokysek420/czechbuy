@@ -23,7 +23,7 @@ export default function CategoryPage() {
   const slug = decodeURIComponent(params.slug as string);
   const { products } = useStore();
 
-  const categoryName = categoryNames[slug] || slug;
+  const categoryName = categoryNames[slug] || slug.replace(/-/g, " ");
   const filteredProducts = products.filter(
     (p) => p.category.toLowerCase().replace(/\s+/g, "-") === slug
   );
