@@ -1,0 +1,130 @@
+[
+  {
+    "id": 1,
+    "name": "Pánská mikina Classic",
+    "price": 1290,
+    "image": "https://images.pexels.com/photos/297928/pexels-photo-297928.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Mikiny"
+  },
+  {
+    "id": 2,
+    "name": "Dámské tričko Premium",
+    "price": 590,
+    "image": "https://images.pexels.com/photos/1659424/pexels-photo-1659424.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Trička"
+  },
+  {
+    "id": 3,
+    "name": "Pánské džíny Slim Fit",
+    "price": 1490,
+    "image": "https://images.pexels.com/photos/19090/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Kalhoty"
+  },
+  {
+    "id": 4,
+    "name": "Dámská bunda Urban",
+    "price": 2490,
+    "image": "https://images.pexels.com/photos/11779504/pexels-photo-11779504.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Bundy"
+  },
+  {
+    "id": 5,
+    "name": "Tenisky Street V2",
+    "price": 1890,
+    "image": "https://images.pexels.com/photos/2385652/pexels-photo-2385652.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Tenisky"
+  },
+  {
+    "id": 6,
+    "name": "Dámské kalhoty Wide Leg",
+    "price": 1190,
+    "image": "https://images.pexels.com/photos/1598505/pexels-photo-1598505.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Kalhoty"
+  },
+  {
+    "id": 7,
+    "name": "Pánská košile Oxford",
+    "price": 990,
+    "image": "https://images.pexels.com/photos/297933/pexels-photo-297933.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Pánské oblečení"
+  },
+  {
+    "id": 8,
+    "name": "Dámské šaty Elegant",
+    "price": 1890,
+    "image": "https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Dámské oblečení"
+  },
+  {
+    "id": 9,
+    "name": "Tenisky Runner Pro",
+    "price": 2190,
+    "image": "https://images.pexels.com/photos/2529148/pexels-photo-2529148.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Tenisky"
+  },
+  {
+    "id": 10,
+    "name": "Dámská mikina Oversize",
+    "price": 1090,
+    "image": "https://images.pexels.com/photos/11779502/pexels-photo-11779502.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Mikiny"
+  },
+  {
+    "id": 11,
+    "name": "Pánská bunda Quilted",
+    "price": 2790,
+    "image": "https://images.pexels.com/photos/10409820/pexels-photo-10409820.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Bundy"
+  },
+  {
+    "id": 12,
+    "name": "Kšiltovka Classic",
+    "price": 490,
+    "image": "https://images.pexels.com/photos/1124961/pexels-photo-1124961.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Doplňky"
+  },
+  {
+    "id": 13,
+    "name": "Pánské tričko Essential",
+    "price": 490,
+    "image": "https://images.pexels.com/photos/5384425/pexels-photo-5384425.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Trička"
+  },
+  {
+    "id": 14,
+    "name": "Batoh Urban 25L",
+    "price": 1290,
+    "image": "https://images.pexels.com/photos/3061834/pexels-photo-3061834.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Doplňky"
+  },
+  {
+    "id": 15,
+    "name": "Dámská halenka Slim",
+    "price": 890,
+    "image": "https://images.pexels.com/photos/2679801/pexels-photo-2679801.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": true,
+    "category": "Dámské oblečení"
+  },
+  {
+    "id": 16,
+    "name": "Pánské šortky Summer",
+    "price": 690,
+    "image": "https://images.pexels.com/photos/1335035/pexels-photo-1335035.jpeg?auto=compress&cs=tinysrgb&w=600",
+    "sale": false,
+    "category": "Kalhoty"
+  }
+]
