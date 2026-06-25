@@ -20,7 +20,7 @@ const categoryNames: Record<string, string> = {
 
 export default function CategoryPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = decodeURIComponent(params.slug as string);
   const { products } = useStore();
 
   const categoryName = categoryNames[slug] || slug;
