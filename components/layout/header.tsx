@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Heart, ShoppingCart, User, Menu, X, Sun, Moon, LogOut, Settings } from "lucide-react";
+import { Search, Heart, ShoppingCart, User, Menu, X, Sun, Moon, LogOut, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useStore } from "@/lib/store-context";
@@ -16,22 +16,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const categories = [
-  "Pánské oblečení",
-  "Dámské oblečení",
-  "Tenisky",
-  "Bundy",
-  "Mikiny",
-  "Trička",
-  "Kalhoty",
-  "Doplňky",
-];
-
 export function Header() {
-  const { cartCount, wishlist } = useStore();
-  const { user, profile, signOut } = useAuth();
+  const { cartCount, wishlist, searchQuery, setSearchQuery } = useStore();
+  const { user, profile, isAdmin, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -61,7 +49,6 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
@@ -75,7 +62,6 @@ export function Header() {
               )}
             </Button>
 
-            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="icon"
@@ -89,22 +75,7 @@ export function Header() {
               )}
             </Button>
 
-            {/* Desktop Actions */}
             <div className="hidden sm:flex items-center space-x-1">
-              {/* Theme Toggle (Mobile) */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className="sm:hidden"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-              </Button>
-
               <Link href="/wishlist">
                 <Button variant="ghost" size="icon" className="relative">
                   <Heart className="h-5 w-5" />
@@ -158,6 +129,14 @@ export function Header() {
                         Nastavení
                       </Link>
                     </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="cursor-pointer">
+                          <Shield className="mr-2 h-4 w-4" />
+                          Administrace
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={signOut} className="text-destructive focus:text-destructive cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -174,7 +153,6 @@ export function Header() {
               )}
             </div>
 
-            {/* Mobile Actions */}
             <div className="sm:hidden flex items-center space-x-1">
               <Link href="/wishlist">
                 <Button variant="ghost" size="icon" className="relative">
@@ -215,40 +193,16 @@ export function Header() {
           </div>
         </div>
 
-        {/* Categories Navigation */}
-        <nav className="hidden md:block pb-3 overflow-x-auto">
-          <ul className="flex items-center space-x-8 text-sm">
-            {categories.map((category) => (
-              <li key={category}>
-                <Link
-                  href={`/kategorie/${category.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-                >
-                  {category}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4">
             <nav className="space-y-1">
-              {categories.map((category) => (
-                <Link
-                  key={category}
-                  href={`/kategorie/${category.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="block py-2 text-muted-foreground hover:text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {category}
-                </Link>
-              ))}
               <div className="pt-4 border-t border-border">
-                {/* Theme Toggle in Mobile Menu */}
                 <button
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    toggleTheme();
+                    setMobileMenuOpen(false);
+                  }}
                   className="flex items-center w-full py-2 text-muted-foreground hover:text-foreground"
                 >
                   {theme === "dark" ? (
@@ -274,6 +228,16 @@ export function Header() {
                       <User className="h-5 w-5" />
                       <span>Můj profil</span>
                     </Link>
+                    {isAdmin && (
+                      <Link
+                        href="/admin"
+                        className="flex items-center space-x-2 py-2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Shield className="h-5 w-5" />
+                        <span>Administrace</span>
+                      </Link>
+                    )}
                     <button
                       onClick={() => {
                         signOut();

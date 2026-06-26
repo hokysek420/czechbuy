@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, ShoppingBag, ShoppingCart, Heart, Settings, LogOut } from "lucide-react";
+import { User, ShoppingBag, ShoppingCart, Heart, Settings, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { useStore } from "@/lib/store-context";
 
 export default function ProfilePage() {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut, isAdmin } = useAuth();
   const { cartCount, wishlist } = useStore();
   const router = useRouter();
 
@@ -37,7 +37,7 @@ export default function ProfilePage() {
     },
     {
       title: "Moje objednávky",
-      description: `Zobrazit historii objednávek`,
+      description: "Zobrazit historii objednávek",
       icon: ShoppingBag,
       href: "/profil/objednavky",
     },
@@ -58,13 +58,11 @@ export default function ProfilePage() {
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Můj účet</h1>
           <p className="text-muted-foreground">Vítejte zpět, {profile?.full_name || "uživateli"}!</p>
         </div>
 
-        {/* Profile Card */}
         <Card className="mb-8">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -87,12 +85,34 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Stats */}
+        {isAdmin && (
+          <Card className="mb-8 border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Shield className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Administrace</h2>
+                    <p className="text-muted-foreground">Spravujte svůj obchod</p>
+                  </div>
+                </div>
+                <Link href="/admin">
+                  <Button className="rounded-full">
+                    Přejít do adminu
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-2 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center space-x-3">
-                <ShoppingBag className="h-8 w-8 text-muted-foreground" />
+                <ShoppingCart className="h-8 w-8 text-muted-foreground" />
                 <div>
                   <p className="text-2xl font-bold text-foreground">{cartCount}</p>
                   <p className="text-sm text-muted-foreground">Produktů v košíku</p>
@@ -113,7 +133,6 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        {/* Menu Items */}
         <div className="grid gap-4">
           {menuItems.map((item) => (
             <Link key={item.href} href={item.href}>
