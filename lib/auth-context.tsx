@@ -87,6 +87,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!error && data.user) {
+      // Also sign the user in immediately so they don't need email confirmation
+      await supabase.auth.signInWithPassword({ email, password });
+
       await supabase.from("user_profiles").insert({
         id: data.user.id,
         email: data.user.email!,
