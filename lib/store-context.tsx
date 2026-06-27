@@ -3,41 +3,18 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description?: string;
-  sale_percentage: number;
-  sku: string;
-  stock_quantity: number;
-  category_id?: string;
-  category_name?: string;
-  images: string[];
-  featured: boolean;
-  is_active: boolean;
-  created_at: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface CartItem extends Product {
-  quantity: number;
-}
+import { Product, Category, Review, CartItem } from "@/lib/types";
 
 interface StoreContextType {
   products: Product[];
   categories: Category[];
   cart: CartItem[];
   wishlist: Product[];
-  addToCart: (product: Product) => void;
+  reviews: Review[];
+  addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
+  clearCart: () => void;
   isInCart: (productId: string) => boolean;
   addToWishlist: (product: Product) => void;
   removeFromWishlist: (productId: string) => void;
@@ -51,6 +28,9 @@ interface StoreContextType {
   setSelectedCategory: (c: string | null) => void;
   filteredProducts: Product[];
   loadingProducts: boolean;
+  loadReviews: (productId: string) => Promise<void>;
+  addReview: (productId: string, rating: number, comment: string) => Promise<{ error: Error | null }>;
+  getRelatedProducts: (productId: string, categoryId?: string) => Product[];
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -61,6 +41,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -124,15 +105,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return matchesSearch && matchesCategory;
   });
 
-  const addToCart = useCallback((product: Product) => {
+  const addToCart = useCallback((product: Product, quantity = 1) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
   }, []);
 
@@ -149,6 +130,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       prev.map((item) => (item.id === productId ? { ...item, quantity } : item))
     );
   }, [removeFromCart]);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
 
   const isInCart = useCallback((productId: string) => {
     return cart.some((item) => item.id === productId);
@@ -171,6 +156,45 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return wishlist.some((item) => item.id === productId);
   }, [wishlist]);
 
+  const loadReviews = useCallback(async (productId: string) => {
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*, user_profiles(full_name)")
+      .eq("product_id", productId)
+      .eq("is_approved", true)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setReviews(data.map((r: any) => ({
+        ...r,
+        user_name: r.user_profiles?.full_name || "Uživatel",
+      })));
+    }
+  }, []);
+
+  const addReview = useCallback(async (productId: string, rating: number, comment: string) => {
+    if (!user) return { error: new Error("Musíte být přihlášeni") };
+
+    const { error } = await supabase.from("reviews").insert({
+      product_id: productId,
+      user_id: user.id,
+      rating,
+      comment: comment || null,
+    });
+
+    if (!error) {
+      await loadReviews(productId);
+    }
+
+    return { error };
+  }, [user, loadReviews]);
+
+  const getRelatedProducts = useCallback((productId: string, categoryId?: string) => {
+    return products
+      .filter((p) => p.id !== productId && (categoryId ? p.category_id === categoryId : true))
+      .slice(0, 4);
+  }, [products]);
+
   const cartTotal = cart.reduce(
     (total, item) => total + getDiscountedPrice(item) * item.quantity,
     0
@@ -185,9 +209,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         categories,
         cart,
         wishlist,
+        reviews,
         addToCart,
         removeFromCart,
         updateQuantity,
+        clearCart,
         isInCart,
         addToWishlist,
         removeFromWishlist,
@@ -201,6 +227,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setSelectedCategory,
         filteredProducts,
         loadingProducts,
+        loadReviews,
+        addReview,
+        getRelatedProducts,
       }}
     >
       {children}

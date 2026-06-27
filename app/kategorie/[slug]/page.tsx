@@ -7,7 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/product-card";
 import { supabase } from "@/lib/supabase/client";
-import { Product } from "@/lib/store-context";
+import { Product } from "@/lib/types";
 
 export default function CategoryPage() {
   const { slug } = useParams();

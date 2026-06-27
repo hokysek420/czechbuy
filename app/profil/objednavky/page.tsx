@@ -9,14 +9,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase/client";
+import { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 
-interface Order {
-  id: string;
-  total: number;
-  payment_status: string;
-  order_status: string;
-  created_at: string;
-}
+const orderStatusLabels: Record<OrderStatus, string> = {
+  pending: "Čeká",
+  awaiting_payment: "Čeká na platbu",
+  paid: "Zaplaceno",
+  processing: "Zpracovává se",
+  shipped: "Odesláno",
+  delivered: "Doručeno",
+  cancelled: "Zrušeno",
+};
+
+const orderStatusColors: Record<OrderStatus, string> = {
+  pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  awaiting_payment: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  paid: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  processing: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+  shipped: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+  delivered: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+};
+
+const paymentStatusLabels: Record<PaymentStatus, string> = {
+  pending: "Čeká",
+  awaiting_payment: "Čeká na platbu",
+  paid: "Zaplaceno",
+  failed: "Selhalo",
+  refunded: "Vráceno",
+};
 
 export default function ProfileOrdersPage() {
   const { user, loading } = useAuth();
@@ -83,16 +104,26 @@ export default function ProfileOrdersPage() {
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <p className="font-semibold">Objednávka #{order.id.slice(0, 8)}</p>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold">Objednávka #{order.id.slice(0, 8)}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${orderStatusColors[order.order_status]}`}>
+                          {orderStatusLabels[order.order_status]}
+                        </span>
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {new Date(order.created_at).toLocaleDateString("cs-CZ")}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="font-bold">{order.total.toLocaleString("cs-CZ")} Kč</span>
-                      <Badge variant={order.payment_status === "paid" ? "default" : "secondary"}>
-                        {order.payment_status === "paid" ? "Zaplaceno" : order.payment_status === "pending" ? "Čeká" : "Selhalo"}
-                      </Badge>
+                      <div className="text-right">
+                        <p className="font-bold">{order.total.toLocaleString("cs-CZ")} Kč</p>
+                        <p className="text-xs text-muted-foreground">
+                          {paymentStatusLabels[order.payment_status]}
+                        </p>
+                        {order.variable_symbol && (
+                          <p className="text-xs text-muted-foreground">VS: {order.variable_symbol}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>

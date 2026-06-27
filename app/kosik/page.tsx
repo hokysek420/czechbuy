@@ -164,9 +164,11 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-6 text-lg">
-                  Přejít k pokladně
-                </Button>
+                <Link href="/pokladna">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-6 text-lg">
+                    Přejít k pokladně
+                  </Button>
+                </Link>
 
                 <p className="text-xs text-muted-foreground text-center">
                   Doprava zdarma při nákupu nad 5000 Kč

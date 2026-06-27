@@ -14,12 +14,14 @@ import {
   LogOut,
   Menu,
   X,
+  Tag,
 } from "lucide-react";
 import { useState } from "react";
 
 const navItems = [
   { label: "Přehled", href: "/admin", icon: LayoutDashboard },
   { label: "Produkty", href: "/admin/produkty", icon: Package },
+  { label: "Kategorie", href: "/admin/kategorie", icon: Tag },
   { label: "Objednávky", href: "/admin/objednavky", icon: ShoppingBag },
   { label: "Zákazníci", href: "/admin/zakaznici", icon: Users },
   { label: "Nastavení", href: "/admin/nastaveni", icon: Settings },

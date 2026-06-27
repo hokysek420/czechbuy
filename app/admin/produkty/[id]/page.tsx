@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
-import { useStore, Product } from "@/lib/store-context";
+import { useStore } from "@/lib/store-context";
+import { Product } from "@/lib/types";
 
 export default function EditProductPage() {
   const { id } = useParams();

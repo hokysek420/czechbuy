@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
-import { Product } from "@/lib/store-context";
+import { Product } from "@/lib/types";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);

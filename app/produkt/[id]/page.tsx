@@ -4,19 +4,30 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart, Heart, ArrowLeft, Check, Truck, RotateCcw, Shield } from "lucide-react";
+import { ShoppingCart, Heart, ArrowLeft, Check, Truck, RotateCcw, Shield, Star, Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useStore, Product } from "@/lib/store-context";
+import { Textarea } from "@/components/ui/textarea";
+import { useStore } from "@/lib/store-context";
+import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase/client";
+import { Product, Review } from "@/lib/types";
+import { ProductCard } from "@/components/product/product-card";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { addToCart, isInCart, addToWishlist, isInWishlist, getDiscountedPrice } = useStore();
+  const { user } = useAuth();
+  const { addToCart, isInCart, addToWishlist, isInWishlist, getDiscountedPrice, getRelatedProducts, loadReviews, addReview, reviews } = useStore();
+  const { toast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -29,16 +40,37 @@ export default function ProductDetailPage() {
         .maybeSingle();
 
       if (!error && data) {
-        setProduct({
+        const mapped: Product = {
           ...data,
           category_name: data.categories?.name,
-        } as Product);
+        };
+        setProduct(mapped);
+        setRelatedProducts(getRelatedProducts(data.id, data.category_id));
+        await loadReviews(data.id);
       }
       setLoading(false);
     };
 
     loadProduct();
-  }, [id]);
+  }, [id, getRelatedProducts, loadReviews]);
+
+  const handleAddReview = async () => {
+    if (!user) {
+      toast({ title: "Přihlášení vyžadováno", description: "Pro napsání recenze se musíte přihlásit.", variant: "destructive" });
+      return;
+    }
+    if (!product) return;
+    setSubmittingReview(true);
+    const { error } = await addReview(product.id, rating, comment);
+    if (error) {
+      toast({ title: "Chyba", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Děkujeme", description: "Vaše recenze byla odeslána." });
+      setComment("");
+      setRating(5);
+    }
+    setSubmittingReview(false);
+  };
 
   if (loading) {
     return (
@@ -71,6 +103,10 @@ export default function ProductDetailPage() {
     ? product.images
     : ["https://images.pexels.com/photos/297928/pexels-photo-297928.jpeg?auto=compress&cs=tinysrgb&w=600"];
 
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
+
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -82,6 +118,7 @@ export default function ProductDetailPage() {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-12">
+          {/* Images */}
           <div className="space-y-4">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
               <Image
@@ -99,12 +136,12 @@ export default function ProductDetailPage() {
               )}
             </div>
             {images.length > 1 && (
-              <div className="flex gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-2">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-colors ${
                       selectedImage === i ? "border-primary" : "border-transparent"
                     }`}
                   >
@@ -115,6 +152,7 @@ export default function ProductDetailPage() {
             )}
           </div>
 
+          {/* Info */}
           <div className="space-y-6">
             <div>
               <p className="text-sm text-muted-foreground uppercase tracking-wide mb-2">
@@ -122,6 +160,17 @@ export default function ProductDetailPage() {
               </p>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{product.name}</h1>
             </div>
+
+            {averageRating && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className={`h-5 w-5 ${s <= Math.round(Number(averageRating)) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                  ))}
+                </div>
+                <span className="text-sm text-muted-foreground">{averageRating} ({reviews.length} {reviews.length === 1 ? "recenze" : reviews.length < 5 ? "recenze" : "recenzí"})</span>
+              </div>
+            )}
 
             <div className="flex items-baseline gap-3">
               <span className="text-3xl font-bold text-foreground">
@@ -144,7 +193,7 @@ export default function ProductDetailPage() {
               <span>Skladem: <strong className="text-foreground">{product.stock_quantity} ks</strong></span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center border rounded-lg">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -161,9 +210,7 @@ export default function ProductDetailPage() {
                 </button>
               </div>
               <Button
-                onClick={() => {
-                  for (let i = 0; i < quantity; i++) addToCart(product);
-                }}
+                onClick={() => addToCart(product, quantity)}
                 className={`flex-1 rounded-full ${
                   inCart
                     ? "bg-green-600 hover:bg-green-700"
@@ -188,9 +235,7 @@ export default function ProductDetailPage() {
                 onClick={() => addToWishlist(product)}
                 className="rounded-full"
               >
-                <Heart
-                  className={`h-5 w-5 ${inWishlist ? "fill-red-500 text-red-500" : ""}`}
-                />
+                <Heart className={`h-5 w-5 ${inWishlist ? "fill-red-500 text-red-500" : ""}`} />
               </Button>
             </div>
 
@@ -210,6 +255,76 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Reviews */}
+        <div className="mt-16 max-w-3xl">
+          <h2 className="text-2xl font-bold mb-6">Hodnocení zákazníků</h2>
+
+          {user && (
+            <div className="bg-muted/50 rounded-xl p-6 mb-8">
+              <h3 className="font-semibold mb-4">Napsat recenzi</h3>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-sm text-muted-foreground">Hodnocení:</span>
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <button key={s} onClick={() => setRating(s)}>
+                    <Star className={`h-6 w-6 ${s <= rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                  </button>
+                ))}
+              </div>
+              <Textarea
+                placeholder="Napište svůj názor..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                rows={3}
+                className="mb-3"
+              />
+              <Button onClick={handleAddReview} disabled={submittingReview} className="rounded-full">
+                <Send className="mr-2 h-4 w-4" />
+                Odeslat recenzi
+              </Button>
+            </div>
+          )}
+
+          {reviews.length === 0 ? (
+            <p className="text-muted-foreground">Zatím žádné recenze.</p>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review.id} className="border rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <span className="font-medium text-sm">{review.user_name}</span>
+                    </div>
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star key={s} className={`h-4 w-4 ${s <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} />
+                      ))}
+                    </div>
+                  </div>
+                  {review.comment && <p className="text-muted-foreground text-sm">{review.comment}</p>}
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {new Date(review.created_at).toLocaleDateString("cs-CZ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold mb-6">Související produkty</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
