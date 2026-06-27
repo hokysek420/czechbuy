@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   Tag,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ const navItems = [
   { label: "Kategorie", href: "/admin/kategorie", icon: Tag },
   { label: "Objednávky", href: "/admin/objednavky", icon: ShoppingBag },
   { label: "Zákazníci", href: "/admin/zakaznici", icon: Users },
+  { label: "CMS", href: "/admin/cms", icon: FileText },
   { label: "Nastavení", href: "/admin/nastaveni", icon: Settings },
 ];
 

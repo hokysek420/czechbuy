@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Heart, ShoppingCart, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useStore, Product } from "@/lib/store-context";
+import { useStore } from "@/lib/store-context";
+import { Product } from "@/lib/types";
 
 interface ProductCardProps {
   product: Product;

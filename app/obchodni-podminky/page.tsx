@@ -1,0 +1,13 @@
+import { supabase } from "@/lib/supabase/client";
+import { CmsPageView, generateCmsMetadata } from "@/components/cms/cms-page";
+import { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const page = await supabase.from("cms_pages").select("*").eq("slug", "obchodni-podminky").maybeSingle().then(r => r.data as any);
+  return generateCmsMetadata(page);
+}
+
+export default async function TermsPage() {
+  const { data } = await supabase.from("cms_pages").select("*").eq("slug", "obchodni-podminky").maybeSingle();
+  return <CmsPageView page={data as any} />;
+}

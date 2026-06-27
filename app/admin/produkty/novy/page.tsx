@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload, Loader2, X } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,13 +12,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase/client";
 import { useStore } from "@/lib/store-context";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 export default function NewProductPage() {
   const router = useRouter();
   const { categories } = useStore();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [form, setForm] = useState({
     name: "",
@@ -31,41 +31,6 @@ export default function NewProductPage() {
     featured: false,
     is_active: true,
   });
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingImages(true);
-    const uploadedUrls: string[] = [];
-
-    for (const file of Array.from(files)) {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(fileName, file, { cacheControl: "3600", upsert: false });
-
-      if (uploadError) {
-        toast({ title: "Chyba nahrávání", description: uploadError.message, variant: "destructive" });
-        continue;
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(publicUrl);
-    }
-
-    setImages((prev) => [...prev, ...uploadedUrls]);
-    setUploadingImages(false);
-  };
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,26 +137,7 @@ export default function NewProductPage() {
 
             <div className="space-y-2">
               <Label>Obrázky</Label>
-              <div className="flex items-center gap-4">
-                <Label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-input hover:bg-muted transition-colors">
-                  <Upload className="h-4 w-4" />
-                  <span>Nahrát obrázky</span>
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-                </Label>
-                {uploadingImages && <Loader2 className="h-4 w-4 animate-spin" />}
-              </div>
-              {images.length > 0 && (
-                <div className="flex gap-2 flex-wrap mt-2">
-                  {images.map((img, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => removeImage(i)} className="absolute top-0 right-0 bg-black/50 text-white p-0.5 rounded-bl">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ImageUpload images={images} onChange={setImages} />
             </div>
 
             <div className="flex gap-4">
