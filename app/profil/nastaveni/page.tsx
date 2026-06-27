@@ -3,21 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, User } from "lucide-react";
+import { ArrowLeft, User, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
 
-export default function SettingsPage() {
+export default function ProfileSettingsPage() {
   const { user, profile, loading, updateProfile } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [fullName, setFullName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [fullName, setFullName] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -31,23 +30,19 @@ export default function SettingsPage() {
     }
   }, [profile]);
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setSaving(true);
+
     const { error } = await updateProfile({ full_name: fullName });
-    setSaving(false);
 
     if (error) {
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se uložit změny.",
-        variant: "destructive",
-      });
+      toast({ title: "Chyba", description: "Nepodařilo se uložit změny.", variant: "destructive" });
     } else {
-      toast({
-        title: "Uloženo",
-        description: "Změny byly úspěšně uloženy.",
-      });
+      toast({ title: "Uloženo", description: "Vaše údaje byly úspěšně aktualizovány." });
     }
+
+    setSaving(false);
   };
 
   if (loading || !user) {
@@ -61,69 +56,45 @@ export default function SettingsPage() {
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/profil">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zpět na profil
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground">Nastavení</h1>
-          <p className="text-muted-foreground mt-1">Upravte své osobní údaje</p>
-        </div>
+        <Link href="/profil">
+          <Button variant="ghost" className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zpět na profil
+          </Button>
+        </Link>
 
-        {/* Profile Settings */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <User className="mr-2 h-5 w-5" />
-              Osobní údaje
-            </CardTitle>
-            <CardDescription>Aktualizujte své jméno a kontaktní informace</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Jméno a příjmení</Label>
-              <Input
-                id="fullName"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Jan Novák"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                value={profile?.email || ""}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">E-mail nelze změnit</p>
-            </div>
-
-            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto">
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? "Ukládání..." : "Uložit změny"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Password Section */}
         <Card>
           <CardHeader>
-            <CardTitle>Změna hesla</CardTitle>
-            <CardDescription>Změňte si své heslo</CardDescription>
+            <CardTitle>Osobní údaje</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm mb-4">
-              Pro změnu hesla použijte odkaz v e-mailu pro obnovu hesla.
-            </p>
-            <Button variant="outline" disabled>
-              Žádost o změnu hesla
-            </Button>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Jméno a příjmení</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="email" value={profile?.email || ""} disabled className="pl-10 bg-muted" />
+                </div>
+              </div>
+
+              <Button type="submit" disabled={saving} className="rounded-full">
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Uložit změny
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>

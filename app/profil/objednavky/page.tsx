@@ -3,20 +3,43 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Package } from "lucide-react";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase/client";
+import { Order, OrderStatus, PaymentStatus } from "@/lib/types";
 
-interface Order {
-  id: string;
-  total_price: number;
-  status: string;
-  created_at: string;
-}
+const orderStatusLabels: Record<OrderStatus, string> = {
+  pending: "Čeká",
+  awaiting_payment: "Čeká na platbu",
+  paid: "Zaplaceno",
+  processing: "Zpracovává se",
+  shipped: "Odesláno",
+  delivered: "Doručeno",
+  cancelled: "Zrušeno",
+};
 
-export default function OrdersPage() {
+const orderStatusColors: Record<OrderStatus, string> = {
+  pending: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  awaiting_payment: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  paid: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  processing: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+  shipped: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+  delivered: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+};
+
+const paymentStatusLabels: Record<PaymentStatus, string> = {
+  pending: "Čeká",
+  awaiting_payment: "Čeká na platbu",
+  paid: "Zaplaceno",
+  failed: "Selhalo",
+  refunded: "Vráceno",
+};
+
+export default function ProfileOrdersPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -29,55 +52,22 @@ export default function OrdersPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-      fetchOrders();
-    }
+    const loadOrders = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setOrders(data as Order[]);
+      }
+      setOrdersLoading(false);
+    };
+
+    loadOrders();
   }, [user]);
-
-  const fetchOrders = async () => {
-    if (!user) return;
-
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setOrders(data as Order[]);
-    }
-    setOrdersLoading(false);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("cs-CZ", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const getStatusText = (status: string) => {
-    const statuses: Record<string, string> = {
-      pending: "Čeká na zpracování",
-      processing: "Zpracovává se",
-      shipped: "Odesláno",
-      delivered: "Doručeno",
-      cancelled: "Zrušeno",
-    };
-    return statuses[status] || status;
-  };
-
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      pending: "text-yellow-600",
-      processing: "text-blue-600",
-      shipped: "text-purple-600",
-      delivered: "text-green-600",
-      cancelled: "text-red-600",
-    };
-    return colors[status] || "text-muted-foreground";
-  };
 
   if (loading || !user) {
     return (
@@ -90,63 +80,51 @@ export default function OrdersPage() {
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/profil">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Zpět na profil
-            </Button>
-          </Link>
-          <h1 className="text-3xl font-bold text-foreground">Moje objednávky</h1>
-          <p className="text-muted-foreground mt-1">Historie vašich objednávek</p>
-        </div>
+        <Link href="/profil">
+          <Button variant="ghost" className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Zpět na profil
+          </Button>
+        </Link>
+
+        <h1 className="text-3xl font-bold text-foreground mb-2">Moje objednávky</h1>
+        <p className="text-muted-foreground mb-8">Historie vašich objednávek</p>
 
         {ordersLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-pulse text-muted-foreground">Načítání objednávek...</div>
-          </div>
+          <div className="text-center py-16 text-muted-foreground">Načítání objednávek...</div>
         ) : orders.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Žádné objednávky
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Zatím nemáte žádné objednávky. Začněte nakupovat!
-              </p>
-              <Link href="/">
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full">
-                  Nakupovat
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <div className="flex flex-col items-center justify-center py-16">
+            <ShoppingBag className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Zatím nemáte žádné objednávky.</p>
+          </div>
         ) : (
           <div className="space-y-4">
             {orders.map((order) => (
               <Card key={order.id}>
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Package className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <CardTitle className="text-lg">Objednávka #{order.id.slice(0, 8)}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{formatDate(order.created_at)}</p>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold">Objednávka #{order.id.slice(0, 8)}</p>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${orderStatusColors[order.order_status]}`}>
+                          {orderStatusLabels[order.order_status]}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.created_at).toLocaleDateString("cs-CZ")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-bold">{order.total.toLocaleString("cs-CZ")} Kč</p>
+                        <p className="text-xs text-muted-foreground">
+                          {paymentStatusLabels[order.payment_status]}
+                        </p>
+                        {order.variable_symbol && (
+                          <p className="text-xs text-muted-foreground">VS: {order.variable_symbol}</p>
+                        )}
                       </div>
                     </div>
-                    <span className={`text-sm font-medium ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <p className="text-muted-foreground">Celkem</p>
-                    <p className="text-xl font-bold text-foreground">
-                      {order.total_price.toLocaleString("cs-CZ")} Kč
-                    </p>
                   </div>
                 </CardContent>
               </Card>

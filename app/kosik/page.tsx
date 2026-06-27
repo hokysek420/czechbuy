@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useStore } from "@/lib/store-context";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, cartTotal } = useStore();
+  const { cart, removeFromCart, updateQuantity, cartTotal, getDiscountedPrice } = useStore();
 
   if (cart.length === 0) {
     return (
@@ -34,7 +34,6 @@ export default function CartPage() {
   return (
     <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
             Nákupní košík
@@ -48,90 +47,101 @@ export default function CartPage() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.map((item) => (
-              <Card key={item.id} className="overflow-hidden">
-                <div className="flex flex-col sm:flex-row">
-                  {/* Image */}
-                  <div className="relative w-full sm:w-40 h-48 sm:h-40 flex-shrink-0">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, 160px"
-                    />
-                    {item.sale && (
-                      <span className="absolute top-2 left-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
-                        SLEVA
-                      </span>
-                    )}
-                  </div>
+            {cart.map((item) => {
+              const price = getDiscountedPrice(item);
+              const hasSale = item.sale_percentage > 0;
+              const imageUrl = item.images && item.images.length > 0
+                ? item.images[0]
+                : "https://images.pexels.com/photos/297928/pexels-photo-297928.jpeg?auto=compress&cs=tinysrgb&w=600";
 
-                  {/* Content */}
-                  <div className="flex-1 p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                      <div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                          {item.category}
-                        </p>
-                        <h3 className="font-semibold text-card-foreground">
-                          {item.name}
-                        </h3>
-                        <p className="text-lg font-bold text-card-foreground mt-1">
-                          {item.price.toLocaleString("cs-CZ")} Kč
-                        </p>
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity - 1)
-                          }
-                          className="h-8 w-8 rounded-full"
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center font-medium text-foreground">
-                          {item.quantity}
+              return (
+                <Card key={item.id} className="overflow-hidden">
+                  <div className="flex flex-col sm:flex-row">
+                    <div className="relative w-full sm:w-40 h-48 sm:h-40 flex-shrink-0">
+                      <Image
+                        src={imageUrl}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 160px"
+                      />
+                      {hasSale && (
+                        <span className="absolute top-2 left-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-red-500 text-white">
+                          -{item.sale_percentage}%
                         </span>
+                      )}
+                    </div>
+
+                    <div className="flex-1 p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                            {item.category_name || "Oblečení"}
+                          </p>
+                          <h3 className="font-semibold text-card-foreground">
+                            {item.name}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-lg font-bold text-card-foreground">
+                              {price.toLocaleString("cs-CZ")} Kč
+                            </p>
+                            {hasSale && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {item.price.toLocaleString("cs-CZ")} Kč
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity - 1)
+                            }
+                            className="h-8 w-8 rounded-full"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </Button>
+                          <span className="w-8 text-center font-medium text-foreground">
+                            {item.quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() =>
+                              updateQuantity(item.id, item.quantity + 1)
+                            }
+                            className="h-8 w-8 rounded-full"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-4">
+                        <p className="font-semibold text-foreground">
+                          {(price * item.quantity).toLocaleString("cs-CZ")} Kč
+                        </p>
                         <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            updateQuantity(item.id, item.quantity + 1)
-                          }
-                          className="h-8 w-8 rounded-full"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Odebrat
                         </Button>
                       </div>
                     </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                      <p className="font-semibold text-foreground">
-                        {(item.price * item.quantity).toLocaleString("cs-CZ")} Kč
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Odebrat
-                      </Button>
-                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              );
+            })}
           </div>
 
-          {/* Summary */}
           <div className="lg:col-span-1">
             <Card className="sticky top-24">
               <CardHeader>
@@ -154,9 +164,11 @@ export default function CartPage() {
                   </span>
                 </div>
 
-                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-6 text-lg">
-                  Přejít k pokladně
-                </Button>
+                <Link href="/pokladna">
+                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-6 text-lg">
+                    Přejít k pokladně
+                  </Button>
+                </Link>
 
                 <p className="text-xs text-muted-foreground text-center">
                   Doprava zdarma při nákupu nad 5000 Kč

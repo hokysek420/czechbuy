@@ -10,7 +10,7 @@ export function TrendingSection() {
   const { products } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const trendingProducts = products.filter((p) => p.sale).slice(0, 8);
+  const trendingProducts = products.filter((p) => p.sale_percentage > 0).slice(0, 8);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollRef.current) return;
