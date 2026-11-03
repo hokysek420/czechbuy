@@ -9,10 +9,11 @@ const COUNTDOWN_PATH = "/brzy-otevirame";
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow internal Next.js assets, API routes, and static files
+  // 1. Allow system paths, ACME SSL challenges (.well-known), Next.js assets, API routes & static files
   if (
+    pathname.startsWith("/.well-known") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api/") ||
+    pathname.startsWith("/api") ||
     pathname === "/favicon.ico" ||
     pathname === "/robots.txt" ||
     pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico|woff|woff2|ttf|css|js)$/)
@@ -64,8 +65,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except static files and images
+     * Match all request paths except system paths, ACME SSL challenges, static files and images
      */
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|\\.well-known|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };
