@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { CartProvider } from "@/lib/cart-context";
+import { PreorderModal } from "@/components/shop/preorder-modal";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
         >
           <CartProvider>
             {children}
+            <PreorderModal />
           </CartProvider>
         </ThemeProvider>
       </body>
