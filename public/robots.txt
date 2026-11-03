@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /interni-portal-8f2a9x/
+Allow: /
+
+Sitemap: https://czechbuy.cz/sitemap.xml

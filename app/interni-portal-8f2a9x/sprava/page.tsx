@@ -1,0 +1,998 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  TrendingUp,
+  Package,
+  ShoppingBag,
+  Boxes,
+  LogOut,
+  ExternalLink,
+  Plus,
+  Save,
+  Trash2,
+  Check,
+  Search,
+  Filter,
+  Eye,
+} from "lucide-react";
+import { Product, Order, OrderStatus, FragranceConcentration, FragranceGender } from "@/types";
+import {
+  getInitialProducts,
+  saveProducts,
+  getInitialOrders,
+  saveOrders,
+} from "@/lib/admin-store";
+import { formatPrice, formatDate } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+export default function AdminDashboardPage() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"orders" | "products">("orders");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Search & filter
+  const [orderSearch, setOrderSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+
+  // Product inline edit state: map of productId -> { price, stock }
+  const [editingProducts, setEditingProducts] = useState<
+    Record<string, { price: number; stock: number }>
+  >({});
+  const [savedSuccessId, setSavedSuccessId] = useState<string | null>(null);
+
+  // Selected order modal
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // New product modal
+  const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [newProductData, setNewProductData] = useState({
+    name: "",
+    brand: "",
+    price: 2490,
+    volume: "100 ml",
+    stock: 20,
+    concentration: "EdP" as FragranceConcentration,
+    gender: "unisex" as FragranceGender,
+    headNotes: "Bergamot, Citrusy",
+    heartNotes: "Levandule, Koření",
+    baseNotes: "Cedr, Ambroxan",
+    description: "",
+    image:
+      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80",
+  });
+
+  useEffect(() => {
+    const loadedOrders = getInitialOrders();
+    const loadedProducts = getInitialProducts();
+    setOrders(loadedOrders);
+    setProducts(loadedProducts);
+
+    const initialEdits: Record<string, { price: number; stock: number }> = {};
+    loadedProducts.forEach((p) => {
+      initialEdits[p.id] = { price: p.price, stock: p.stock };
+    });
+    setEditingProducts(initialEdits);
+    setIsLoaded(true);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+      router.push("/interni-portal-8f2a9x/login");
+      router.refresh();
+    } catch {
+      router.push("/interni-portal-8f2a9x/login");
+    }
+  };
+
+  // Orders logic
+  const handleOrderStatusChange = (orderId: string, newStatus: OrderStatus) => {
+    const updated = orders.map((o) =>
+      o.id === orderId ? { ...o, status: newStatus } : o
+    );
+    setOrders(updated);
+    saveOrders(updated);
+    if (selectedOrder && selectedOrder.id === orderId) {
+      setSelectedOrder({ ...selectedOrder, status: newStatus });
+    }
+  };
+
+  // Products logic
+  const handleProductInputChange = (
+    id: string,
+    field: "price" | "stock",
+    value: number
+  ) => {
+    setEditingProducts((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleSaveProduct = (id: string) => {
+    const changes = editingProducts[id];
+    if (!changes) return;
+
+    const updated = products.map((p) => {
+      if (p.id === id) {
+        return {
+          ...p,
+          price: changes.price,
+          stock: changes.stock,
+          volumeVariants: p.volumeVariants.map((v, idx) =>
+            idx === 0 ? { ...v, price: changes.price, inStock: changes.stock } : v
+          ),
+        };
+      }
+      return p;
+    });
+
+    setProducts(updated);
+    saveProducts(updated);
+    setSavedSuccessId(id);
+    setTimeout(() => setSavedSuccessId(null), 2000);
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    if (confirm("Opravdu si přejete tento produkt z katalogu smazat?")) {
+      const updated = products.filter((p) => p.id !== id);
+      setProducts(updated);
+      saveProducts(updated);
+    }
+  };
+
+  const handleCreateProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProductData.name || !newProductData.brand) {
+      alert("Vyplňte prosím název a značku parfému.");
+      return;
+    }
+
+    const newId = `${newProductData.brand.toLowerCase().replace(/\s+/g, "-")}-${newProductData.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")}-${Date.now().toString().slice(-4)}`;
+
+    const createdProduct: Product = {
+      id: newId,
+      slug: newId,
+      name: newProductData.name,
+      brand: newProductData.brand,
+      category: "parfemy",
+      price: Number(newProductData.price),
+      volume: newProductData.volume,
+      volumeVariants: [
+        {
+          volume: newProductData.volume,
+          price: Number(newProductData.price),
+          inStock: Number(newProductData.stock),
+        },
+      ],
+      stock: Number(newProductData.stock),
+      concentration: newProductData.concentration,
+      gender: newProductData.gender,
+      scentNotes: {
+        head: newProductData.headNotes.split(",").map((s) => s.trim()),
+        heart: newProductData.heartNotes.split(",").map((s) => s.trim()),
+        base: newProductData.baseNotes.split(",").map((s) => s.trim()),
+      },
+      description:
+        newProductData.description ||
+        "Autentický originální parfém z oficiální evropské distribuce.",
+      image: newProductData.image,
+      featured: false,
+      isNew: true,
+    };
+
+    const updated = [createdProduct, ...products];
+    setProducts(updated);
+    saveProducts(updated);
+
+    setEditingProducts((prev) => ({
+      ...prev,
+      [newId]: { price: createdProduct.price, stock: createdProduct.stock },
+    }));
+
+    setIsAddProductOpen(false);
+    // Reset form
+    setNewProductData({
+      name: "",
+      brand: "",
+      price: 2490,
+      volume: "100 ml",
+      stock: 20,
+      concentration: "EdP",
+      gender: "unisex",
+      headNotes: "Bergamot, Citrusy",
+      heartNotes: "Levandule, Koření",
+      baseNotes: "Cedr, Ambroxan",
+      description: "",
+      image:
+        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80",
+    });
+  };
+
+  // KPIs
+  const totalRevenue = orders.reduce((sum, o) => sum + o.totalPrice, 0);
+  const totalOrdersCount = orders.length;
+  const avgOrderValue =
+    totalOrdersCount > 0 ? Math.round(totalRevenue / totalOrdersCount) : 0;
+  const totalStockUnits = products.reduce((sum, p) => sum + p.stock, 0);
+
+  // Status badge helper
+  const getStatusBadge = (status: OrderStatus) => {
+    switch (status) {
+      case "nova":
+        return <Badge variant="warning">Nová</Badge>;
+      case "zpracovava_se":
+        return <Badge variant="secondary">Zpracovává se</Badge>;
+      case "odeslano":
+        return <Badge variant="brand">Odesláno</Badge>;
+      case "doruceno":
+        return <Badge variant="success">Doručeno</Badge>;
+      case "stornovano":
+        return <Badge variant="danger">Stornováno</Badge>;
+    }
+  };
+
+  // Filtered lists
+  const filteredOrders = orders.filter(
+    (o) =>
+      o.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.customer.firstName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.customer.lastName.toLowerCase().includes(orderSearch.toLowerCase()) ||
+      o.customer.email.toLowerCase().includes(orderSearch.toLowerCase())
+  );
+
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.brand.toLowerCase().includes(productSearch.toLowerCase())
+  );
+
+  if (!isLoaded) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-12">
+        <p className="text-sm text-neutral-500 animate-pulse">
+          Načítání administrátorských dat...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col">
+      {/* Top Admin Navigation Bar */}
+      <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-black tracking-tight text-neutral-950 dark:text-white">
+              Czech<span className="text-neutral-500 font-light">Buy</span>
+            </span>
+            <span className="text-neutral-300 dark:text-neutral-700">|</span>
+            <span className="text-xs uppercase font-bold tracking-widest text-emerald-600 dark:text-emerald-400">
+              Správa Portálu
+            </span>
+            <span className="hidden sm:inline-block text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono text-neutral-500">
+              /interni-portal-8f2a9x/sprava
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              target="_blank"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors"
+            >
+              <span>Zobrazit obchod</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+
+            <ThemeToggle />
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-300 hover:text-red-600 dark:hover:text-red-400 py-1.5 px-3 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Odhlásit se</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Admin Content */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* KPI Statistics */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Celkový obrat</span>
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+            </div>
+            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2">
+              {formatPrice(totalRevenue)}
+            </p>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Ze všech přijatých objednávek
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Počet objednávek</span>
+              <ShoppingBag className="h-4 w-4 text-neutral-900 dark:text-white" />
+            </div>
+            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2">
+              {totalOrdersCount}
+            </p>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Aktivní objednávky v systému
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Průměrný nákup (AOV)</span>
+              <Package className="h-4 w-4 text-amber-500" />
+            </div>
+            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2">
+              {formatPrice(avgOrderValue)}
+            </p>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Průměrná hodnota košíku
+            </p>
+          </div>
+
+          <div className="bg-white dark:bg-neutral-900 p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+            <div className="flex items-center justify-between text-neutral-500 text-xs font-medium">
+              <span>Celkem skladem</span>
+              <Boxes className="h-4 w-4 text-neutral-500" />
+            </div>
+            <p className="text-2xl font-black text-neutral-900 dark:text-white mt-2">
+              {totalStockUnits} ks
+            </p>
+            <p className="text-[11px] text-neutral-400 mt-1">
+              V {products.length} položkách katalogu
+            </p>
+          </div>
+        </section>
+
+        {/* Tab Controls */}
+        <div className="flex border-b border-neutral-200 dark:border-neutral-800 gap-6">
+          <button
+            type="button"
+            onClick={() => setActiveTab("orders")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "orders"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>Správa objednávek ({orders.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("products")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "products"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <Boxes className="h-4 w-4" />
+            <span>Katalog produktů & Sklad ({products.length})</span>
+          </button>
+        </div>
+
+        {/* Tab 1: Orders Management */}
+        {activeTab === "orders" && (
+          <div className="space-y-4">
+            {/* Search filter bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="relative max-w-sm w-full">
+                <input
+                  type="text"
+                  value={orderSearch}
+                  onChange={(e) => setOrderSearch(e.target.value)}
+                  placeholder="Vyhledat dle čísla objednávky nebo jména..."
+                  className="w-full text-xs py-2 pl-9 pr-4 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none"
+                />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+              </div>
+              <span className="text-xs text-neutral-500">
+                Zobrazeno {filteredOrders.length} z {orders.length} objednávek
+              </span>
+            </div>
+
+            {/* Orders Table */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
+                  <thead className="bg-neutral-50 dark:bg-neutral-950/60 uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">
+                    <tr>
+                      <th className="py-3 px-4">Objednávka</th>
+                      <th className="py-3 px-4">Datum</th>
+                      <th className="py-3 px-4">Zákazník</th>
+                      <th className="py-3 px-4">Doprava / Platba</th>
+                      <th className="py-3 px-4">Částka</th>
+                      <th className="py-3 px-4">Stav objednávky</th>
+                      <th className="py-3 px-4 text-right">Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                    {filteredOrders.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-8 text-center text-neutral-500">
+                          Nenalezena žádná odpovídající objednávka.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredOrders.map((order) => (
+                        <tr
+                          key={order.id}
+                          className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                        >
+                          <td className="py-3.5 px-4 font-mono font-bold text-neutral-900 dark:text-white">
+                            {order.id}
+                          </td>
+                          <td className="py-3.5 px-4 text-neutral-500">
+                            {formatDate(order.createdAt)}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <p className="font-semibold text-neutral-900 dark:text-white">
+                              {order.customer.firstName} {order.customer.lastName}
+                            </p>
+                            <p className="text-[11px] text-neutral-400">
+                              {order.customer.city} · {order.customer.email}
+                            </p>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="uppercase font-semibold text-neutral-700 dark:text-neutral-300">
+                              {order.shippingMethod}
+                            </span>
+                            <span className="text-neutral-400"> / </span>
+                            <span className="uppercase text-neutral-500">
+                              {order.paymentMethod}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-white">
+                            {formatPrice(order.totalPrice)}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <select
+                              value={order.status}
+                              onChange={(e) =>
+                                handleOrderStatusChange(
+                                  order.id,
+                                  e.target.value as OrderStatus
+                                )
+                              }
+                              className="text-xs py-1 px-2 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none cursor-pointer"
+                            >
+                              <option value="nova">Nová</option>
+                              <option value="zpracovava_se">Zpracovává se</option>
+                              <option value="odeslano">Odesláno</option>
+                              <option value="doruceno">Doručeno</option>
+                              <option value="stornovano">Stornováno</option>
+                            </select>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrder(order)}
+                              className="p-1.5 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                              title="Zobrazit detail objednávky"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Products & Stock Management */}
+        {activeTab === "products" && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="relative max-w-sm w-full">
+                <input
+                  type="text"
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  placeholder="Vyhledat parfém nebo značku..."
+                  className="w-full text-xs py-2 pl-9 pr-4 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none"
+                />
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-neutral-400" />
+              </div>
+
+              <Button
+                onClick={() => setIsAddProductOpen(true)}
+                size="sm"
+                className="inline-flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Přidat nový parfém</span>
+              </Button>
+            </div>
+
+            {/* Products Table */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
+                  <thead className="bg-neutral-50 dark:bg-neutral-950/60 uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">
+                    <tr>
+                      <th className="py-3 px-4 w-14">Foto</th>
+                      <th className="py-3 px-4">Název & Značka</th>
+                      <th className="py-3 px-4">Objem</th>
+                      <th className="py-3 px-4">Koncentrace</th>
+                      <th className="py-3 px-4 w-32">Cena (Kč)</th>
+                      <th className="py-3 px-4 w-28">Sklad (ks)</th>
+                      <th className="py-3 px-4 text-right">Akce</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                    {filteredProducts.map((product) => {
+                      const editState = editingProducts[product.id] || {
+                        price: product.price,
+                        stock: product.stock,
+                      };
+                      const hasChanges =
+                        editState.price !== product.price ||
+                        editState.stock !== product.stock;
+                      const isJustSaved = savedSuccessId === product.id;
+
+                      return (
+                        <tr
+                          key={product.id}
+                          className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                        >
+                          <td className="py-3 px-4">
+                            <div className="relative h-12 w-10 rounded overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                              <Image
+                                src={product.image}
+                                alt={product.name}
+                                fill
+                                className="object-cover"
+                                sizes="40px"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                              {product.brand}
+                            </span>
+                            <p className="font-semibold text-neutral-900 dark:text-white">
+                              {product.name}
+                            </p>
+                          </td>
+                          <td className="py-3 px-4 text-neutral-600 dark:text-neutral-400 font-medium">
+                            {product.volume}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge variant="secondary">
+                              {product.concentration}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4">
+                            <input
+                              type="number"
+                              min={0}
+                              step={10}
+                              value={editState.price}
+                              onChange={(e) =>
+                                handleProductInputChange(
+                                  product.id,
+                                  "price",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="w-24 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
+                            />
+                          </td>
+                          <td className="py-3 px-4">
+                            <input
+                              type="number"
+                              min={0}
+                              value={editState.stock}
+                              onChange={(e) =>
+                                handleProductInputChange(
+                                  product.id,
+                                  "stock",
+                                  Number(e.target.value)
+                                )
+                              }
+                              className="w-20 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
+                            />
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <div className="inline-flex items-center gap-1.5">
+                              {isJustSaved ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold px-2 py-1">
+                                  <Check className="h-3.5 w-3.5" />
+                                  <span>Uloženo</span>
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSaveProduct(product.id)}
+                                  disabled={!hasChanges}
+                                  className={`p-1.5 rounded transition-colors ${
+                                    hasChanges
+                                      ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                      : "text-neutral-300 dark:text-neutral-700 cursor-not-allowed"
+                                  }`}
+                                  title="Uložit změny ceny a skladu"
+                                >
+                                  <Save className="h-4 w-4" />
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="p-1.5 rounded text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                title="Smazat produkt z nabídky"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Modal: Order Details */}
+      <Modal
+        isOpen={!!selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+        title={selectedOrder ? `Detail objednávky ${selectedOrder.id}` : ""}
+        description={
+          selectedOrder ? `Vytvořeno: ${formatDate(selectedOrder.createdAt)}` : ""
+        }
+      >
+        {selectedOrder && (
+          <div className="space-y-4 text-xs">
+            <div className="p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 space-y-1">
+              <p className="font-semibold text-neutral-900 dark:text-white">
+                {selectedOrder.customer.firstName} {selectedOrder.customer.lastName}
+              </p>
+              <p className="text-neutral-500">
+                {selectedOrder.customer.address}, {selectedOrder.customer.zip}{" "}
+                {selectedOrder.customer.city}
+              </p>
+              <p className="text-neutral-500">
+                E-mail: {selectedOrder.customer.email} · Tel:{" "}
+                {selectedOrder.customer.phone}
+              </p>
+              {selectedOrder.customer.note && (
+                <p className="text-neutral-600 dark:text-neutral-300 pt-1 border-t border-neutral-200 dark:border-neutral-700 italic">
+                  Poznámka: „{selectedOrder.customer.note}“
+                </p>
+              )}
+            </div>
+
+            <div>
+              <h4 className="font-bold uppercase tracking-wider text-[11px] text-neutral-500 mb-2">
+                Položky v objednávce
+              </h4>
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {selectedOrder.items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="py-2 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="font-semibold text-neutral-900 dark:text-white">
+                        {item.brand} {item.name}
+                      </p>
+                      <p className="text-[11px] text-neutral-400">
+                        {item.quantity}× {item.volume} ({formatPrice(item.price)} / ks)
+                      </p>
+                    </div>
+                    <span className="font-bold text-neutral-900 dark:text-white">
+                      {formatPrice(item.price * item.quantity)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-1 text-neutral-600 dark:text-neutral-400">
+              <div className="flex justify-between">
+                <span>Doprava ({selectedOrder.shippingMethod.toUpperCase()}):</span>
+                <span>{formatPrice(selectedOrder.shippingPrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Platba ({selectedOrder.paymentMethod.toUpperCase()}):</span>
+                <span>{formatPrice(selectedOrder.paymentPrice)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold text-neutral-900 dark:text-white pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                <span>Celkem k úhradě:</span>
+                <span>{formatPrice(selectedOrder.totalPrice)}</span>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between">
+              <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+                Stav:
+              </span>
+              <select
+                value={selectedOrder.status}
+                onChange={(e) =>
+                  handleOrderStatusChange(
+                    selectedOrder.id,
+                    e.target.value as OrderStatus
+                  )
+                }
+                className="text-xs py-1 px-3 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold"
+              >
+                <option value="nova">Nová</option>
+                <option value="zpracovava_se">Zpracovává se</option>
+                <option value="odeslano">Odesláno</option>
+                <option value="doruceno">Doručeno</option>
+                <option value="stornovano">Stornováno</option>
+              </select>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: Add New Product */}
+      <Modal
+        isOpen={isAddProductOpen}
+        onClose={() => setIsAddProductOpen(false)}
+        title="Přidat nový originální parfém"
+        description="Vložte autentické údaje o parfému z evropské distribuce."
+      >
+        <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Značka (Brand) *
+              </label>
+              <input
+                type="text"
+                required
+                value={newProductData.brand}
+                onChange={(e) =>
+                  setNewProductData({ ...newProductData, brand: e.target.value })
+                }
+                placeholder="např. Tom Ford"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Název parfému *
+              </label>
+              <input
+                type="text"
+                required
+                value={newProductData.name}
+                onChange={(e) =>
+                  setNewProductData({ ...newProductData, name: e.target.value })
+                }
+                placeholder="např. Ombré Leather"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Cena (Kč) *
+              </label>
+              <input
+                type="number"
+                required
+                min={100}
+                value={newProductData.price}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    price: Number(e.target.value),
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Objem *
+              </label>
+              <input
+                type="text"
+                required
+                value={newProductData.volume}
+                onChange={(e) =>
+                  setNewProductData({ ...newProductData, volume: e.target.value })
+                }
+                placeholder="100 ml"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Sklad (ks) *
+              </label>
+              <input
+                type="number"
+                required
+                min={0}
+                value={newProductData.stock}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    stock: Number(e.target.value),
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Koncentrace
+              </label>
+              <select
+                value={newProductData.concentration}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    concentration: e.target.value as FragranceConcentration,
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              >
+                <option value="EdP">EdP (Parfémovaná voda)</option>
+                <option value="EdT">EdT (Toaletní voda)</option>
+                <option value="Parfum">Parfum</option>
+                <option value="Extrait">Extrait de Parfum</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Určení
+              </label>
+              <select
+                value={newProductData.gender}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    gender: e.target.value as FragranceGender,
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              >
+                <option value="panske">Pánské</option>
+                <option value="damske">Dámské</option>
+                <option value="unisex">Unisex</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Složení (Hlava / Srdce / Základ)
+            </label>
+            <div className="space-y-1.5">
+              <input
+                type="text"
+                value={newProductData.headNotes}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    headNotes: e.target.value,
+                  })
+                }
+                placeholder="Hlava: např. Bergamot, Šafrán"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+              <input
+                type="text"
+                value={newProductData.heartNotes}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    heartNotes: e.target.value,
+                  })
+                }
+                placeholder="Srdce: např. Kůže, Pačuli"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+              <input
+                type="text"
+                value={newProductData.baseNotes}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    baseNotes: e.target.value,
+                  })
+                }
+                placeholder="Základ: např. Ambroxan, Mech"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Popis parfému
+            </label>
+            <textarea
+              rows={2}
+              value={newProductData.description}
+              onChange={(e) =>
+                setNewProductData({
+                  ...newProductData,
+                  description: e.target.value,
+                })
+              }
+              placeholder="Charakter vůně, vonné akordy..."
+              className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              URL obrázku
+            </label>
+            <input
+              type="url"
+              value={newProductData.image}
+              onChange={(e) =>
+                setNewProductData({ ...newProductData, image: e.target.value })
+              }
+              placeholder="https://images.unsplash.com/..."
+              className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+            />
+          </div>
+
+          <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-800">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddProductOpen(false)}
+            >
+              Zrušit
+            </Button>
+            <Button type="submit" size="sm">
+              Uložit a naskladnit
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
