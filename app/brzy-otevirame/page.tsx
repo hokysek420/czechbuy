@@ -13,9 +13,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-
-// Target launch date: exactly 18 days from Nov 3, 2026 -> Nov 21, 2026 at 20:00:00 CET
-const LAUNCH_DATE_ISO = "2026-11-21T20:00:00+01:00";
+import {
+  getCountdownConfig,
+  CountdownConfig,
+  DEFAULT_COUNTDOWN_CONFIG,
+} from "@/lib/countdown-settings";
 
 interface TimeRemaining {
   days: number;
@@ -26,6 +28,7 @@ interface TimeRemaining {
 }
 
 export default function ComingSoonCountdownPage() {
+  const [config, setConfig] = useState<CountdownConfig>(DEFAULT_COUNTDOWN_CONFIG);
   const [timeLeft, setTimeLeft] = useState<TimeRemaining>({
     days: 18,
     hours: 0,
@@ -42,9 +45,11 @@ export default function ComingSoonCountdownPage() {
 
   useEffect(() => {
     setMounted(true);
+    const activeConfig = getCountdownConfig();
+    setConfig(activeConfig);
 
     const calculateTime = () => {
-      const targetTime = new Date(LAUNCH_DATE_ISO).getTime();
+      const targetTime = new Date(activeConfig.targetDate).getTime();
       const now = new Date().getTime();
       const difference = targetTime - now;
 
@@ -135,18 +140,20 @@ export default function ComingSoonCountdownPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="tracking-wide">Připravujeme otevření e-shopu</span>
+            <span className="tracking-wide">{config.badgeText}</span>
             <span className="text-neutral-300 dark:text-neutral-700">|</span>
-            <span className="text-[11px] font-mono text-neutral-500">21. 11. 2026</span>
+            <span className="text-[11px] font-mono text-neutral-500">
+              {config.targetDate.replace("T", " ")}
+            </span>
           </div>
 
           {/* Main Titles */}
           <div className="space-y-4">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.1]">
-              Připravujeme pro vás nový zážitek z nakupování
+              {config.headline}
             </h1>
             <p className="max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
-              CzechBuy brzy spustí exkluzivní nabídku prémiových vůní a zakázkového importu. Otevření proběhne za:
+              {config.subtext}
             </p>
           </div>
 

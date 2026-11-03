@@ -22,13 +22,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Set secure cookie valid for 7 days
+    // Set secure cookies valid for 7 days
     const cookieStore = cookies();
     cookieStore.set(ADMIN_COOKIE_NAME, "authenticated_session_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
+    });
+
+    cookieStore.set("czechbuy_admin_session", "authenticated_session_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
 

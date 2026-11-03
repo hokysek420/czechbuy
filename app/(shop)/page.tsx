@@ -1,15 +1,24 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Sparkles, CheckCircle, Shield, Award } from "lucide-react";
 import { INITIAL_PRODUCTS } from "@/lib/mock-data";
+import { getInitialProducts } from "@/lib/admin-store";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryTiles } from "@/components/shop/category-tiles";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
-  const featuredProducts = INITIAL_PRODUCTS.filter((p) => p.featured);
-  const newArrivals = INITIAL_PRODUCTS.filter((p) => p.isNew);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getInitialProducts());
+  }, []);
+
+  const featuredProducts = products.filter((p) => p.featured);
+  const newArrivals = products.filter((p) => p.isNew);
 
   return (
     <div className="space-y-12 pb-16">

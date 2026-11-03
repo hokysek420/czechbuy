@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
@@ -17,6 +17,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { INITIAL_PRODUCTS } from "@/lib/mock-data";
+import { getInitialProducts } from "@/lib/admin-store";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,13 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const product = INITIAL_PRODUCTS.find((p) => p.id === id || p.slug === id);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getInitialProducts());
+  }, []);
+
+  const product = products.find((p) => p.id === id || p.slug === id);
 
   if (!product) {
     notFound();

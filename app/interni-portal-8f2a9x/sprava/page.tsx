@@ -18,6 +18,10 @@ import {
   Search,
   Filter,
   Eye,
+  Pencil,
+  Clock,
+  Sparkles,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Product, Order, OrderStatus, FragranceConcentration, FragranceGender } from "@/types";
 import {
@@ -26,6 +30,12 @@ import {
   getInitialOrders,
   saveOrders,
 } from "@/lib/admin-store";
+import {
+  getCountdownConfig,
+  saveCountdownConfig,
+  CountdownConfig,
+  DEFAULT_COUNTDOWN_CONFIG,
+} from "@/lib/countdown-settings";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +44,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"orders" | "products">("orders");
+  const [activeTab, setActiveTab] = useState<"products" | "countdown" | "orders">("products");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -51,6 +61,46 @@ export default function AdminDashboardPage() {
 
   // Selected order modal
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  // Countdown settings state
+  const [countdownConfig, setCountdownConfig] = useState<CountdownConfig>(DEFAULT_COUNTDOWN_CONFIG);
+  const [countdownSavedSuccess, setCountdownSavedSuccess] = useState(false);
+
+  // Edit product modal state
+  const [isEditProductOpen, setIsEditProductOpen] = useState(false);
+  const [editingProductData, setEditingProductData] = useState<{
+    id: string;
+    name: string;
+    brand: string;
+    price: number;
+    volume: string;
+    stock: number;
+    concentration: FragranceConcentration;
+    gender: FragranceGender;
+    headNotes: string;
+    heartNotes: string;
+    baseNotes: string;
+    description: string;
+    image: string;
+    featured: boolean;
+    isNew: boolean;
+  }>({
+    id: "",
+    name: "",
+    brand: "",
+    price: 2490,
+    volume: "100 ml",
+    stock: 20,
+    concentration: "EdP",
+    gender: "unisex",
+    headNotes: "",
+    heartNotes: "",
+    baseNotes: "",
+    description: "",
+    image: "",
+    featured: false,
+    isNew: false,
+  });
 
   // New product modal
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
@@ -73,8 +123,10 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const loadedOrders = getInitialOrders();
     const loadedProducts = getInitialProducts();
+    const loadedCountdown = getCountdownConfig();
     setOrders(loadedOrders);
     setProducts(loadedProducts);
+    setCountdownConfig(loadedCountdown);
 
     const initialEdits: Record<string, { price: number; stock: number }> = {};
     loadedProducts.forEach((p) => {
@@ -83,6 +135,83 @@ export default function AdminDashboardPage() {
     setEditingProducts(initialEdits);
     setIsLoaded(true);
   }, []);
+
+  const handleOpenEditProduct = (p: Product) => {
+    setEditingProductData({
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      price: p.price,
+      volume: p.volume,
+      stock: p.stock,
+      concentration: p.concentration,
+      gender: p.gender,
+      headNotes: p.scentNotes.head.join(", "),
+      heartNotes: p.scentNotes.heart.join(", "),
+      baseNotes: p.scentNotes.base.join(", "),
+      description: p.description,
+      image: p.image,
+      featured: Boolean(p.featured),
+      isNew: Boolean(p.isNew),
+    });
+    setIsEditProductOpen(true);
+  };
+
+  const handleSaveEditedProduct = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updated = products.map((p) => {
+      if (p.id === editingProductData.id) {
+        return {
+          ...p,
+          name: editingProductData.name,
+          brand: editingProductData.brand,
+          price: Number(editingProductData.price),
+          volume: editingProductData.volume,
+          stock: Number(editingProductData.stock),
+          concentration: editingProductData.concentration,
+          gender: editingProductData.gender,
+          description: editingProductData.description,
+          image: editingProductData.image,
+          featured: editingProductData.featured,
+          isNew: editingProductData.isNew,
+          scentNotes: {
+            head: editingProductData.headNotes.split(",").map((s) => s.trim()),
+            heart: editingProductData.heartNotes.split(",").map((s) => s.trim()),
+            base: editingProductData.baseNotes.split(",").map((s) => s.trim()),
+          },
+          volumeVariants: p.volumeVariants.map((v, idx) =>
+            idx === 0
+              ? {
+                  ...v,
+                  volume: editingProductData.volume,
+                  price: Number(editingProductData.price),
+                  inStock: Number(editingProductData.stock),
+                }
+              : v
+          ),
+        };
+      }
+      return p;
+    });
+
+    setProducts(updated);
+    saveProducts(updated);
+    setEditingProducts((prev) => ({
+      ...prev,
+      [editingProductData.id]: {
+        price: Number(editingProductData.price),
+        stock: Number(editingProductData.stock),
+      },
+    }));
+    setIsEditProductOpen(false);
+  };
+
+  const handleSaveCountdown = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveCountdownConfig(countdownConfig);
+    setCountdownSavedSuccess(true);
+    setTimeout(() => setCountdownSavedSuccess(false), 3000);
+  };
 
   const handleLogout = async () => {
     try {
@@ -374,18 +503,6 @@ export default function AdminDashboardPage() {
         <div className="flex border-b border-neutral-200 dark:border-neutral-800 gap-6">
           <button
             type="button"
-            onClick={() => setActiveTab("orders")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
-              activeTab === "orders"
-                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
-                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
-            }`}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            <span>Správa objednávek ({orders.length})</span>
-          </button>
-          <button
-            type="button"
             onClick={() => setActiveTab("products")}
             className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
               activeTab === "products"
@@ -395,6 +512,30 @@ export default function AdminDashboardPage() {
           >
             <Boxes className="h-4 w-4" />
             <span>Katalog produktů & Sklad ({products.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("countdown")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "countdown"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <Clock className="h-4 w-4" />
+            <span>Nastavení odpočtu a spuštění</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("orders")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "orders"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span>Správa objednávek ({orders.length})</span>
           </button>
         </div>
 
@@ -626,6 +767,15 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             <div className="inline-flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEditProduct(product)}
+                                className="p-1.5 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                title="Upravit kompletní parametry parfému (popis, objem, foto...)"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+
                               {isJustSaved ? (
                                 <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold px-2 py-1">
                                   <Check className="h-3.5 w-3.5" />
@@ -664,6 +814,113 @@ export default function AdminDashboardPage() {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Tab 3: Countdown Settings */}
+        {activeTab === "countdown" && (
+          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+              <div>
+                <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-500" />
+                  <span>Správa odpočtu a textů spuštění (Coming Soon)</span>
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Upravte cílové datum otevření a textaci, kterou vidí neautorizovaní návštěvníci.
+                </p>
+              </div>
+
+              <Link
+                href="/brzy-otevirame"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-200 font-medium text-xs transition"
+              >
+                <span>Otevřít náhled odpočtu</span>
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+
+            <form onSubmit={handleSaveCountdown} className="space-y-5 max-w-2xl text-xs">
+              <div>
+                <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                  Cílové datum a čas otevření (Target Launch Date & Time) *
+                </label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={countdownConfig.targetDate}
+                  onChange={(e) =>
+                    setCountdownConfig({ ...countdownConfig, targetDate: e.target.value })
+                  }
+                  className="w-full sm:w-80 text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Na toto datum je navázán živý odpočet dní, hodin, minut a sekund na veřejném webu.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                  Hlavní nadpis stránky odpočtu *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={countdownConfig.headline}
+                  onChange={(e) =>
+                    setCountdownConfig({ ...countdownConfig, headline: e.target.value })
+                  }
+                  placeholder="Připravujeme pro vás nový zážitek z nakupování"
+                  className="w-full text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                  Doprovodný podtext *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={countdownConfig.subtext}
+                  onChange={(e) =>
+                    setCountdownConfig({ ...countdownConfig, subtext: e.target.value })
+                  }
+                  placeholder="CzechBuy brzy spustí exkluzivní nabídku prémiových vůní a zakázkového importu. Otevření proběhne za:"
+                  className="w-full text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-800 dark:text-neutral-200 mb-1.5">
+                  Text horního stavového odznaku
+                </label>
+                <input
+                  type="text"
+                  value={countdownConfig.badgeText}
+                  onChange={(e) =>
+                    setCountdownConfig({ ...countdownConfig, badgeText: e.target.value })
+                  }
+                  placeholder="Připravujeme otevření e-shopu"
+                  className="w-full sm:w-80 text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                />
+              </div>
+
+              <div className="pt-3 flex items-center gap-3">
+                <Button type="submit" size="sm" className="inline-flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  <span>Uložit nastavení odpočtu</span>
+                </Button>
+
+                {countdownSavedSuccess && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-semibold animate-in fade-in">
+                    <Check className="h-4 w-4" />
+                    <span>Nastavení odpočtu bylo úspěšně uloženo a je okamžitě aktivní.</span>
+                  </span>
+                )}
+              </div>
+            </form>
           </div>
         )}
       </main>
@@ -989,6 +1246,258 @@ export default function AdminDashboardPage() {
             </Button>
             <Button type="submit" size="sm">
               Uložit a naskladnit
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal: Edit Existing Product */}
+      <Modal
+        isOpen={isEditProductOpen}
+        onClose={() => setIsEditProductOpen(false)}
+        title={`Upravit parfém: ${editingProductData.name || ""}`}
+        description="Upravte veškeré specifikace, cenu, sklad či fotografii parfému."
+      >
+        <form onSubmit={handleSaveEditedProduct} className="space-y-4 text-xs">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Značka (Brand) *
+              </label>
+              <input
+                type="text"
+                required
+                value={editingProductData.brand}
+                onChange={(e) =>
+                  setEditingProductData({ ...editingProductData, brand: e.target.value })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Název parfému *
+              </label>
+              <input
+                type="text"
+                required
+                value={editingProductData.name}
+                onChange={(e) =>
+                  setEditingProductData({ ...editingProductData, name: e.target.value })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Cena (Kč) *
+              </label>
+              <input
+                type="number"
+                required
+                min={100}
+                value={editingProductData.price}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    price: Number(e.target.value),
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Objem *
+              </label>
+              <input
+                type="text"
+                required
+                value={editingProductData.volume}
+                onChange={(e) =>
+                  setEditingProductData({ ...editingProductData, volume: e.target.value })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Sklad (ks) *
+              </label>
+              <input
+                type="number"
+                required
+                min={0}
+                value={editingProductData.stock}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    stock: Number(e.target.value),
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Koncentrace
+              </label>
+              <select
+                value={editingProductData.concentration}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    concentration: e.target.value as FragranceConcentration,
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              >
+                <option value="EdP">EdP (Parfémovaná voda)</option>
+                <option value="EdT">EdT (Toaletní voda)</option>
+                <option value="Parfum">Parfum</option>
+                <option value="Extrait">Extrait de Parfum</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                Určení
+              </label>
+              <select
+                value={editingProductData.gender}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    gender: e.target.value as FragranceGender,
+                  })
+                }
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+              >
+                <option value="panske">Pánské</option>
+                <option value="damske">Dámské</option>
+                <option value="unisex">Unisex</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Složení (Hlava / Srdce / Základ)
+            </label>
+            <div className="space-y-1.5">
+              <input
+                type="text"
+                value={editingProductData.headNotes}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    headNotes: e.target.value,
+                  })
+                }
+                placeholder="Hlava: např. Bergamot, Šafrán"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+              <input
+                type="text"
+                value={editingProductData.heartNotes}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    heartNotes: e.target.value,
+                  })
+                }
+                placeholder="Srdce: např. Kůže, Pačuli"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+              <input
+                type="text"
+                value={editingProductData.baseNotes}
+                onChange={(e) =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    baseNotes: e.target.value,
+                  })
+                }
+                placeholder="Základ: např. Ambroxan, Mech"
+                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Popis parfému
+            </label>
+            <textarea
+              rows={3}
+              value={editingProductData.description}
+              onChange={(e) =>
+                setEditingProductData({
+                  ...editingProductData,
+                  description: e.target.value,
+                })
+              }
+              placeholder="Charakter vůně, vonné akordy..."
+              className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              URL obrázku
+            </label>
+            <input
+              type="url"
+              value={editingProductData.image}
+              onChange={(e) =>
+                setEditingProductData({ ...editingProductData, image: e.target.value })
+              }
+              placeholder="https://images.unsplash.com/..."
+              className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+            />
+          </div>
+
+          <div className="flex items-center gap-4 pt-1">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editingProductData.featured}
+                onChange={(e) =>
+                  setEditingProductData({ ...editingProductData, featured: e.target.checked })
+                }
+                className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              />
+              <span>Doporučený produkt (Featured)</span>
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editingProductData.isNew}
+                onChange={(e) =>
+                  setEditingProductData({ ...editingProductData, isNew: e.target.checked })
+                }
+                className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              />
+              <span>Označit jako novinku</span>
+            </label>
+          </div>
+
+          <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-800">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditProductOpen(false)}
+            >
+              Zrušit
+            </Button>
+            <Button type="submit" size="sm">
+              Uložit změny
             </Button>
           </div>
         </form>

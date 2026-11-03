@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, Sparkles } from "lucide-react";
 import { INITIAL_PRODUCTS } from "@/lib/mock-data";
+import { getInitialProducts } from "@/lib/admin-store";
 import { ProductCard } from "@/components/shop/product-card";
 import { CatalogFilters, FilterState } from "@/components/shop/catalog-filters";
 import { FragranceGender, FragranceConcentration } from "@/types";
@@ -13,9 +14,15 @@ function CatalogContent() {
   const initialQuery = searchParams.get("q") || "";
   const initialGender = (searchParams.get("gender") as FragranceGender) || "all";
 
-  const maxPossiblePrice = useMemo(() => {
-    return Math.max(...INITIAL_PRODUCTS.map((p) => p.price), 10000);
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    setProducts(getInitialProducts());
   }, []);
+
+  const maxPossiblePrice = useMemo(() => {
+    return Math.max(...products.map((p) => p.price), 10000);
+  }, [products]);
 
   const [filters, setFilters] = useState<FilterState>({
     search: initialQuery,
@@ -43,12 +50,12 @@ function CatalogContent() {
 
   // Extract available brands
   const availableBrands = useMemo(() => {
-    return Array.from(new Set(INITIAL_PRODUCTS.map((p) => p.brand))).sort();
-  }, []);
+    return Array.from(new Set(products.map((p) => p.brand))).sort();
+  }, [products]);
 
   // Filter & sort
   const filteredProducts = useMemo(() => {
-    return INITIAL_PRODUCTS.filter((product) => {
+    return products.filter((product) => {
       // Search
       if (filters.search) {
         const query = filters.search.toLowerCase();

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const ADMIN_SESSION_COOKIE = "czechbuy_admin_session";
 const ADMIN_COOKIE_NAME = "czechbuy_admin_token";
 const ADMIN_BASE_PATH = "/interni-portal-8f2a9x";
 const COUNTDOWN_PATH = "/brzy-otevirame";
@@ -19,8 +20,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check admin authorization cookie
-  const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  // Check admin authorization cookie (supporting czechbuy_admin_session & legacy czechbuy_admin_token)
+  const token =
+    request.cookies.get(ADMIN_SESSION_COOKIE)?.value ||
+    request.cookies.get(ADMIN_COOKIE_NAME)?.value;
   const isAuthenticatedAdmin = Boolean(token && token.trim().length > 0);
 
   // 2. Scenario: Authenticated Administrator
