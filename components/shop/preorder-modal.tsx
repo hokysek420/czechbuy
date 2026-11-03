@@ -14,8 +14,8 @@ export function PreorderModal() {
   useEffect(() => {
     setIsMounted(true);
 
-    // Skip showing on internal admin portal
-    if (pathname && pathname.startsWith("/interni-portal-8f2a9x")) {
+    // Skip showing on internal admin portal or on countdown / coming-soon page
+    if (pathname && (pathname.startsWith("/interni-portal-8f2a9x") || pathname === "/brzy-otevirame")) {
       return;
     }
 

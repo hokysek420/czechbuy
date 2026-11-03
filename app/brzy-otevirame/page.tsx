@@ -1,0 +1,308 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  Sparkles,
+  ShieldCheck,
+  PackageCheck,
+  Crown,
+  Bell,
+  CheckCircle2,
+  Lock,
+  ArrowRight,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+
+// Target launch date: exactly 18 days from Nov 3, 2026 -> Nov 21, 2026 at 20:00:00 CET
+const LAUNCH_DATE_ISO = "2026-11-21T20:00:00+01:00";
+
+interface TimeRemaining {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isComplete: boolean;
+}
+
+export default function ComingSoonCountdownPage() {
+  const [timeLeft, setTimeLeft] = useState<TimeRemaining>({
+    days: 18,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isComplete: false,
+  });
+  const [mounted, setMounted] = useState(false);
+
+  // Newsletter state
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+
+    const calculateTime = () => {
+      const targetTime = new Date(LAUNCH_DATE_ISO).getTime();
+      const now = new Date().getTime();
+      const difference = targetTime - now;
+
+      if (difference <= 0) {
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+          isComplete: true,
+        });
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
+
+      setTimeLeft({ days, hours, minutes, seconds, isComplete: false });
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      setStatus("error");
+      setErrorMessage("Zadejte prosím platnou e-mailovou adresu.");
+      return;
+    }
+
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      if (res.ok) {
+        setStatus("success");
+        setEmail("");
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setStatus("error");
+        setErrorMessage(data.error || "Došlo k chybě při registraci e-mailu.");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMessage("Spojení se nezdařilo. Zkuste to prosím za chvíli.");
+    }
+  };
+
+  const padZero = (n: number) => String(n).padStart(2, "0");
+
+  return (
+    <div className="min-h-screen flex flex-col justify-between bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-neutral-900">
+      {/* Top Header */}
+      <header className="w-full border-b border-neutral-200/80 dark:border-neutral-800/80 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl sm:text-2xl font-black tracking-tight text-neutral-950 dark:text-white">
+              Czech<span className="font-light text-neutral-400">Buy</span>
+            </span>
+            <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ml-2">
+              Privátní přístup
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Countdown & Hero Content */}
+      <main className="flex-1 flex items-center justify-center py-12 sm:py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl w-full mx-auto text-center space-y-10">
+          {/* Micro Status Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 shadow-xs">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="tracking-wide">Připravujeme otevření e-shopu</span>
+            <span className="text-neutral-300 dark:text-neutral-700">|</span>
+            <span className="text-[11px] font-mono text-neutral-500">21. 11. 2026</span>
+          </div>
+
+          {/* Main Titles */}
+          <div className="space-y-4">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 dark:text-white leading-[1.1]">
+              Připravujeme pro vás nový zážitek z nakupování
+            </h1>
+            <p className="max-w-2xl mx-auto text-sm sm:text-base text-neutral-600 dark:text-neutral-400 leading-relaxed font-normal">
+              CzechBuy brzy spustí exkluzivní nabídku prémiových vůní a zakázkového importu. Otevření proběhne za:
+            </p>
+          </div>
+
+          {/* Live Countdown Display */}
+          <div className="pt-2">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 max-w-xl mx-auto">
+              {/* Days */}
+              <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center shadow-xs">
+                <span className="text-3xl sm:text-5xl lg:text-6xl font-black font-mono tracking-tight text-neutral-950 dark:text-white">
+                  {mounted ? padZero(timeLeft.days) : "18"}
+                </span>
+                <span className="mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                  Dní
+                </span>
+              </div>
+
+              {/* Hours */}
+              <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center shadow-xs">
+                <span className="text-3xl sm:text-5xl lg:text-6xl font-black font-mono tracking-tight text-neutral-950 dark:text-white">
+                  {mounted ? padZero(timeLeft.hours) : "00"}
+                </span>
+                <span className="mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                  Hodin
+                </span>
+              </div>
+
+              {/* Minutes */}
+              <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center shadow-xs">
+                <span className="text-3xl sm:text-5xl lg:text-6xl font-black font-mono tracking-tight text-neutral-950 dark:text-white">
+                  {mounted ? padZero(timeLeft.minutes) : "00"}
+                </span>
+                <span className="mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                  Minut
+                </span>
+              </div>
+
+              {/* Seconds */}
+              <div className="bg-neutral-50 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-6 flex flex-col items-center justify-center shadow-xs">
+                <span className="text-3xl sm:text-5xl lg:text-6xl font-black font-mono tracking-tight text-neutral-950 dark:text-white">
+                  {mounted ? padZero(timeLeft.seconds) : "00"}
+                </span>
+                <span className="mt-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
+                  Sekund
+                </span>
+              </div>
+            </div>
+
+            <p className="mt-4 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+              Stanovený termín zahájení: <strong>21. listopadu 2026 ve 20:00 SEČ</strong>
+            </p>
+          </div>
+
+          {/* Email Notification Subscription (Upozornit na spuštění) */}
+          <div className="max-w-md mx-auto pt-4 space-y-3">
+            <div className="text-center">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
+                Upozornit na spuštění
+              </h3>
+              <p className="text-xs text-neutral-500 mt-1">
+                Získejte okamžité upozornění v okamžiku spuštění e-shopu a přednostní přístup ke skladovým zásobám.
+              </p>
+            </div>
+
+            {status === "success" ? (
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>Děkujeme! Jakmile CzechBuy spustíme, budete mezi prvními.</span>
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="space-y-2">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Zadejte váš e-mail..."
+                    disabled={status === "loading"}
+                    className="flex-1 text-xs py-3 px-4 rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition"
+                  />
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900 py-3 px-6 rounded-md font-semibold text-xs uppercase tracking-wider hover:opacity-90 active:scale-[0.99] transition flex items-center justify-center gap-2 disabled:opacity-50 shrink-0"
+                  >
+                    <Bell className="h-3.5 w-3.5" />
+                    <span>{status === "loading" ? "Ukládám..." : "Odebírat"}</span>
+                  </button>
+                </div>
+
+                {status === "error" && (
+                  <p className="text-xs text-red-600 dark:text-red-400 text-left pl-1">
+                    {errorMessage}
+                  </p>
+                )}
+              </form>
+            )}
+          </div>
+
+          {/* 3 Core Trust Pillars */}
+          <div className="pt-8 border-t border-neutral-200/80 dark:border-neutral-800/80 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
+                100% Originální šarže
+              </h4>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Veškeré flakony pocházejí výhradně z certifikované evropské sítě oficiálních dodavatelů.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                <PackageCheck className="h-4 w-4 text-neutral-900 dark:text-neutral-100" />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
+                Zakázkový import
+              </h4>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Garantujeme maximální čerstvost skladových šarží díky přímé návaznosti na centrální sklady.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center">
+                <Crown className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
+                Prémiový výběr
+              </h4>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Vybrané portfolio vůní od Dior, Creed, Tom Ford, Maison Margiela a niche ikon.
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full border-t border-neutral-200/80 dark:border-neutral-800/80 py-6 bg-white dark:bg-neutral-950">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
+          <p>CzechBuy © 2026. Všechna práva vyhrazena.</p>
+
+          <div className="flex items-center gap-4">
+            <Link
+              href="/interni-portal-8f2a9x/login"
+              className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+            >
+              <Lock className="h-3 w-3" />
+              <span>Vstup pro správce</span>
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

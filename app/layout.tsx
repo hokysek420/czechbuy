@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { CartProvider } from "@/lib/cart-context";
 import { PreorderModal } from "@/components/shop/preorder-modal";
+import { AdminPreviewBar } from "@/components/shop/admin-preview-bar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,6 +32,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CartProvider>
+            <AdminPreviewBar />
             {children}
             <PreorderModal />
           </CartProvider>

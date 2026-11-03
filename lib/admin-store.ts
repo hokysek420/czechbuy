@@ -6,7 +6,7 @@ let productsState: Product[] = [...INITIAL_PRODUCTS];
 let ordersState: Order[] = [...INITIAL_ORDERS];
 
 const PRODUCTS_STORAGE_KEY = "czechbuy_admin_products_v1";
-const ORDERS_STORAGE_KEY = "czechbuy_admin_orders_v1";
+const ORDERS_STORAGE_KEY = "czechbuy_admin_orders_v2";
 
 export function getInitialProducts(): Product[] {
   if (typeof window !== "undefined") {
@@ -36,6 +36,8 @@ export function saveProducts(products: Product[]): void {
 export function getInitialOrders(): Order[] {
   if (typeof window !== "undefined") {
     try {
+      // Clear legacy storage containing fake test orders
+      localStorage.removeItem("czechbuy_admin_orders_v1");
       const stored = localStorage.getItem(ORDERS_STORAGE_KEY);
       if (stored) {
         return JSON.parse(stored);
