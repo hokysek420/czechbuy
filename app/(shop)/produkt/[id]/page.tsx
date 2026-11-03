@@ -13,6 +13,8 @@ import {
   Sparkles,
   Layers,
   Heart,
+  Clock,
+  ShieldAlert,
 } from "lucide-react";
 import { INITIAL_PRODUCTS } from "@/lib/mock-data";
 import { formatPrice } from "@/lib/utils";
@@ -226,11 +228,28 @@ export default function ProductDetailPage() {
             </Button>
           </div>
 
+          {/* Pre-Order Disclaimer: Zakázkový import */}
+          <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 p-4 space-y-3 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-neutral-200/60 dark:border-neutral-800 pb-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold text-neutral-900 dark:text-neutral-100">
+                <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Doručení: 12–16 pracovních dní</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Exkluzivní zakázkový import</span>
+              </div>
+            </div>
+            <p className="text-[11px] leading-relaxed text-neutral-600 dark:text-neutral-300">
+              Každou položku zajišťujeme individuálně na základě vaší objednávky přímo z centrálních zahraničních skladů. Díky tomu garantujeme 100% originalitu a nejnovější výrobní šarže. Balíček před odesláním prochází fyzickou výstupní kontrolou.
+            </p>
+          </div>
+
           {/* Quick guarantees */}
-          <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 space-y-2.5 text-xs text-neutral-600 dark:text-neutral-400">
+          <div className="pt-2 space-y-2.5 text-xs text-neutral-600 dark:text-neutral-400">
             <div className="flex items-center gap-2.5">
               <Truck className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />
-              <span>Doručení do 48 hodin kurýrem nebo na výdejní místo</span>
+              <span>Garantované doručení 12–16 pracovních dní kurýrem nebo na výdejní místo</span>
             </div>
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="h-4 w-4 text-neutral-900 dark:text-white shrink-0" />

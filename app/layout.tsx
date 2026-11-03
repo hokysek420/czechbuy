@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   keywords: ["parfémy", "originální parfémy", "niche vůně", "CzechBuy", "Dior Sauvage", "Baccarat Rouge"],
   openGraph: {
     title: "CzechBuy | Prémiové originální parfémy",
-    description: "Široký výběr originálních parfémů z evropské distribuce s doručením do 48 hodin.",
+    description: "Široký výběr originálních parfémů z certifikované evropské distribuce formou zakázkového importu.",
     locale: "cs_CZ",
     type: "website",
   },

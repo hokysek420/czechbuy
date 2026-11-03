@@ -13,6 +13,7 @@ import {
   Truck,
   RotateCcw,
   Tag,
+  Clock,
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/utils";
@@ -292,7 +293,16 @@ export default function CartPage() {
               </div>
             </div>
 
-            <Link href="/pokladna" className="block pt-2">
+            {/* Pre-Order Notice Banner */}
+            <div className="rounded-lg bg-neutral-100/80 dark:bg-neutral-800/60 border border-neutral-200/80 dark:border-neutral-700/60 p-3 flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300">
+              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="leading-snug text-[11px]">
+                <strong className="font-semibold text-neutral-900 dark:text-white">Upozornění k expedici:</strong>{" "}
+                Vaše zboží je zadáno do zakázkového režimu. Předpokládané doručení je 12–16 pracovních dní.
+              </p>
+            </div>
+
+            <Link href="/pokladna" className="block pt-1">
               <Button
                 size="lg"
                 className="w-full uppercase tracking-wider text-xs font-bold flex items-center justify-center gap-2"

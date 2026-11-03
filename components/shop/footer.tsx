@@ -21,7 +21,7 @@ export function Footer() {
             <div className="flex flex-col items-center p-3">
               <Truck className="h-6 w-6 text-neutral-900 dark:text-white mb-2" />
               <h4 className="font-semibold text-neutral-900 dark:text-white text-xs">
-                Expedice do 24 hodin
+                Zakázkový import (12–16 dní)
               </h4>
               <p className="text-[11px] text-neutral-500 mt-1">
                 Doprava zdarma u objednávek nad 2 000 Kč

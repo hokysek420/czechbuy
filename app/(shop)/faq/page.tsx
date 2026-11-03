@@ -14,9 +14,9 @@ const FAQS: FaqItem[] = [
   {
     id: "dodaci-lhuta",
     category: "doprava",
-    question: "Jaká je dodací lhůta pro objednané parfémy?",
+    question: "Proč trvá doručení objednávky 12–16 pracovních dní?",
     answer:
-      "Všechny produkty označené jako 'Skladem' expedujeme do 24 hodin od přijetí objednávky (v pracovní dny). Obvyklá doba doručení přepravci Zásilkovna, PPL či DPD po celé České republice činí 24 až 48 hodin. V případě volby osobního odběru v našem centrálním skladu v Praze je zboží připraveno k vyzvednutí do 2 hodin.",
+      "CzechBuy funguje na principu zakázkového importu. Místo dlouhého skladování parfémů v neoptimálních podmínkách zajišťujeme každý kus individuálně přímo od prověřených evropských distributorů. Tento proces zahrnuje bezpečnou přepravu, verifikaci originality a kontrolu neporušenosti balení před odesláním na vaši adresu.",
   },
   {
     id: "doprava-zdarma",

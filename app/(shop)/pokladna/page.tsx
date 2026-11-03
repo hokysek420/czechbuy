@@ -35,6 +35,12 @@ const checkoutSchema = z.object({
   agreeTerms: z.literal(true, {
     errorMap: () => ({ message: "Musíte souhlasit s obchodními podmínkami" }),
   }),
+  agreePreorder: z.literal(true, {
+    errorMap: () => ({
+      message:
+        "Musíte potvrdit seznámení s předobjednávkovým režimem (12–16 dní)",
+    }),
+  }),
 });
 
 type CheckoutFormData = z.infer<typeof checkoutSchema>;
@@ -53,6 +59,7 @@ export default function CheckoutPage() {
     zip: "",
     note: "",
     agreeTerms: undefined,
+    agreePreorder: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -643,6 +650,27 @@ export default function CheckoutPage() {
                     {formatPrice(grandTotal)}
                   </span>
                 </div>
+              </div>
+
+              {/* Pre-Order Confirmation Checkbox */}
+              <div className="pt-2">
+                <label className="flex items-start gap-2.5 text-xs text-neutral-800 dark:text-neutral-200 cursor-pointer p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                  <input
+                    type="checkbox"
+                    name="agreePreorder"
+                    checked={formData.agreePreorder === true}
+                    onChange={handleInputChange}
+                    className="mt-0.5 w-4 h-4 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 focus:ring-neutral-900 accent-neutral-900 dark:accent-white"
+                  />
+                  <span className="font-medium text-[11px] leading-snug">
+                    Beru na vědomí, že veškeré položky jsou zajišťovány na individuální předobjednávku s garantovaným doručením do 12–16 pracovních dní.
+                  </span>
+                </label>
+                {errors.agreePreorder && (
+                  <p className="text-red-500 text-[11px] mt-1.5 font-medium">
+                    {errors.agreePreorder}
+                  </p>
+                )}
               </div>
 
               {/* Terms Checkbox */}
