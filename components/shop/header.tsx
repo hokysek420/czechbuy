@@ -102,6 +102,15 @@ export function Header() {
                 </span>
               </span>
             </div>
+            <Link
+              href="/digital"
+              className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
+            >
+              Digital
+              <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-purple-200 dark:border-purple-800/60">
+                Coming Soon
+              </span>
+            </Link>
           </nav>
 
           {/* Search bar */}
@@ -189,6 +198,16 @@ export function Header() {
                 Již brzy
               </span>
             </div>
+            <Link
+              href="/digital"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
+            >
+              <span>Digital</span>
+              <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/60">
+                Coming Soon
+              </span>
+            </Link>
 
             {/* Mobile Discord & Instagram Community Links */}
             <div className="pt-2 flex flex-col gap-2">

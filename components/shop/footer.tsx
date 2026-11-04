@@ -148,6 +148,17 @@ export function Footer() {
               <li className="text-neutral-400 dark:text-neutral-600 cursor-not-allowed">
                 Obuv (Připravujeme)
               </li>
+              <li>
+                <Link
+                  href="/digital"
+                  className="inline-flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
+                  <span>Digital</span>
+                  <span className="text-[9px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.2 rounded border border-purple-200 dark:border-purple-800/60">
+                    Coming Soon
+                  </span>
+                </Link>
+              </li>
             </ul>
           </div>
 

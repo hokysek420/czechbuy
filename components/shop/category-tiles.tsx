@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock, Sparkles } from "lucide-react";
 
 export function CategoryTiles() {
   return (
@@ -25,7 +25,7 @@ export function CategoryTiles() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Active Category: Parfémy */}
           <Link
             href="/katalog"
@@ -118,6 +118,43 @@ export function CategoryTiles() {
               </div>
             </div>
           </div>
+
+          {/* New Category: Digital (Coming Soon) */}
+          <Link
+            href="/digital"
+            className="group relative h-96 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 block"
+          >
+            <Image
+              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
+              alt="CzechBuy Digital"
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            />
+            {/* Ambient cyber overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/95 via-neutral-950/40 to-neutral-950/20" />
+            <div className="absolute top-4 right-4">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-md border border-purple-400/30">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Coming Soon</span>
+              </span>
+            </div>
+            <div className="absolute bottom-6 left-6 right-6 text-white">
+              <span className="text-xs uppercase tracking-widest text-purple-300 font-medium">
+                Digitální sekce
+              </span>
+              <h3 className="text-2xl font-bold mt-1 text-white">
+                Digital
+              </h3>
+              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed">
+                Herní klíče, licence, předplatné a vouchery s okamžitým doručením.
+              </p>
+              <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-purple-300 border-b border-purple-400/60 pb-0.5 group-hover:gap-3 transition-all">
+                <span>Zobrazit podrobnosti</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </section>
