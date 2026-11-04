@@ -120,7 +120,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
 
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-            Skladem ({product.stock} ks)
+            {product.stock > 0 ? "Dostupné (Na objednávku)" : "Momentálně nedostupné"}
           </span>
         </div>
       </div>

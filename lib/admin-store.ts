@@ -1,19 +1,29 @@
 import { Product, Order, OrderStatus } from "@/types";
-import { INITIAL_PRODUCTS, INITIAL_ORDERS } from "./mock-data";
 
-// In-memory global store with localStorage persistence on client
-let productsState: Product[] = [...INITIAL_PRODUCTS];
-let ordersState: Order[] = [...INITIAL_ORDERS];
+// In-memory global store initialized to empty array
+let productsState: Product[] = [];
+let ordersState: Order[] = [];
 
-const PRODUCTS_STORAGE_KEY = "czechbuy_admin_products_v1";
+const PRODUCTS_STORAGE_KEY = "czechbuy_products_store_v2";
 const ORDERS_STORAGE_KEY = "czechbuy_admin_orders_v2";
 
+/**
+ * Returns products from localStorage or in-memory store.
+ * Starts completely empty until added by admin.
+ */
 export function getInitialProducts(): Product[] {
   if (typeof window !== "undefined") {
     try {
+      // Purge any legacy localStorage keys that may hold old static mock items
+      localStorage.removeItem("czechbuy_admin_products_v1");
+
       const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          productsState = parsed;
+          return parsed;
+        }
       }
     } catch {
       // fallback
@@ -22,25 +32,47 @@ export function getInitialProducts(): Product[] {
   return productsState;
 }
 
+/**
+ * Saves products to localStorage, notifies all active components,
+ * and syncs with the server API.
+ */
 export function saveProducts(products: Product[]): void {
   productsState = products;
+
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
+      // Dispatch custom event for instant cross-component re-rendering without reload
+      window.dispatchEvent(
+        new CustomEvent("czechbuy_products_changed", { detail: products })
+      );
     } catch {
       // fallback
     }
+
+    // Sync with server API asynchronously
+    fetch("/api/products", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(products),
+    }).catch(() => {});
   }
 }
 
+/**
+ * Orders management
+ */
 export function getInitialOrders(): Order[] {
   if (typeof window !== "undefined") {
     try {
-      // Clear legacy storage containing fake test orders
       localStorage.removeItem("czechbuy_admin_orders_v1");
       const stored = localStorage.getItem(ORDERS_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          ordersState = parsed;
+          return parsed;
+        }
       }
     } catch {
       // fallback
@@ -54,6 +86,9 @@ export function saveOrders(orders: Order[]): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+      window.dispatchEvent(
+        new CustomEvent("czechbuy_orders_changed", { detail: orders })
+      );
     } catch {
       // fallback
     }

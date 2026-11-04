@@ -1,21 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Sparkles, CheckCircle, Shield, Award } from "lucide-react";
-import { INITIAL_PRODUCTS } from "@/lib/mock-data";
-import { getInitialProducts } from "@/lib/admin-store";
+import { ArrowRight, Sparkles, CheckCircle, Shield, Award, PackageSearch } from "lucide-react";
+import { useProducts } from "@/lib/use-products";
 import { ProductCard } from "@/components/shop/product-card";
 import { CategoryTiles } from "@/components/shop/category-tiles";
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-
-  useEffect(() => {
-    setProducts(getInitialProducts());
-  }, []);
+  const { products } = useProducts();
 
   const featuredProducts = products.filter((p) => p.featured);
   const newArrivals = products.filter((p) => p.isNew);
@@ -70,7 +65,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-emerald-400" />
-                <span>Expedice v den objednání</span>
+                <span>Zakázkový import (12–16 dní)</span>
               </div>
               <div className="flex items-center gap-2">
                 <Award className="h-4 w-4 text-emerald-400" />
@@ -99,16 +94,30 @@ export default function HomePage() {
             href="/katalog"
             className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-neutral-900 dark:text-white hover:opacity-75 transition-opacity"
           >
-            <span>Celá nabídka ({INITIAL_PRODUCTS.length})</span>
+            <span>Celá nabídka ({products.length})</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {featuredProducts.slice(0, 4).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {products.length === 0 ? (
+          <div className="max-w-md mx-auto text-center py-16 px-6 bg-neutral-50 dark:bg-neutral-900/40 rounded-2xl border border-neutral-200/80 dark:border-neutral-800 my-4">
+            <div className="w-14 h-14 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto mb-4 text-neutral-900 dark:text-white shadow-xs">
+              <PackageSearch className="h-7 w-7 stroke-[1.5]" />
+            </div>
+            <h3 className="text-base font-bold text-neutral-950 dark:text-white tracking-tight">
+              Kolekce se připravuje
+            </h3>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 leading-relaxed">
+              Momentálně připravujeme naskladnění nových originálních flakonů. Zkontrolujte nabídku brzy.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {(featuredProducts.length > 0 ? featuredProducts : products).slice(0, 4).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Editorial Niche Banner */}

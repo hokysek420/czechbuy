@@ -96,7 +96,7 @@ export function CatalogFilters({
             }
             className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-700 text-neutral-900 focus:ring-neutral-900"
           />
-          <span>Pouze produkty skladem</span>
+          <span>Pouze dostupné položky (na objednávku)</span>
         </label>
       </div>
 

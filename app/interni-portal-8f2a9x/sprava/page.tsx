@@ -154,6 +154,21 @@ export default function AdminDashboardPage() {
     setEditingProducts(initialEdits);
     setIsLoaded(true);
 
+    // Fetch products from server API to ensure cross-session synchronization
+    fetch("/api/products")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((serverData) => {
+        if (Array.isArray(serverData) && serverData.length > 0) {
+          setProducts(serverData);
+          const edits: Record<string, { price: number; stock: number }> = {};
+          serverData.forEach((p) => {
+            edits[p.id] = { price: p.price, stock: p.stock };
+          });
+          setEditingProducts(edits);
+        }
+      })
+      .catch(() => {});
+
     // Fetch Discord webhook configuration status
     fetch("/api/admin/discord-status")
       .then((res) => (res.ok ? res.json() : null))
@@ -767,7 +782,19 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                    {filteredProducts.map((product) => {
+                    {filteredProducts.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-12 px-4 text-center">
+                          <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+                            Žádné produkty v katalogu
+                          </p>
+                          <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+                            Zatím jste nepřidali žádný parfém. Klikněte výše na „Přidat nový parfém“ pro vložení první položky do nabídky.
+                          </p>
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProducts.map((product) => {
                       const editState = editingProducts[product.id] || {
                         price: product.price,
                         stock: product.stock,
@@ -884,7 +911,8 @@ export default function AdminDashboardPage() {
                           </td>
                         </tr>
                       );
-                    })}
+                    })
+                  )}
                   </tbody>
                 </table>
               </div>

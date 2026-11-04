@@ -16,8 +16,7 @@ import {
   Clock,
   ShieldAlert,
 } from "lucide-react";
-import { INITIAL_PRODUCTS } from "@/lib/mock-data";
-import { getInitialProducts } from "@/lib/admin-store";
+import { useProducts } from "@/lib/use-products";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/lib/cart-context";
 import { Button } from "@/components/ui/button";
@@ -28,36 +27,52 @@ export default function ProductDetailPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const { products, isLoaded } = useProducts();
+  const product = products.find((p) => p.id === id || p.slug === id);
+
+  const [selectedVariant, setSelectedVariant] = useState<VolumeVariant | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
-    setProducts(getInitialProducts());
-  }, []);
+    if (product && product.volumeVariants && product.volumeVariants.length > 0) {
+      setSelectedVariant(product.volumeVariants[0]);
+    } else if (product) {
+      setSelectedVariant({
+        volume: product.volume,
+        price: product.price,
+        inStock: product.stock,
+      });
+    }
+  }, [product]);
 
-  const product = products.find((p) => p.id === id || p.slug === id);
+  if (!isLoaded) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-xs text-neutral-500 animate-pulse">
+        Načítání detailu parfému...
+      </div>
+    );
+  }
 
   if (!product) {
     notFound();
   }
 
-  const [selectedVariant, setSelectedVariant] = useState<VolumeVariant>(
-    product.volumeVariants && product.volumeVariants.length > 0
+  const activeVariant =
+    selectedVariant ||
+    (product.volumeVariants && product.volumeVariants.length > 0
       ? product.volumeVariants[0]
-      : { volume: product.volume, price: product.price, inStock: product.stock }
-  );
-
-  const [quantity, setQuantity] = useState(1);
-  const [isAdded, setIsAdded] = useState(false);
-  const { addToCart } = useCart();
+      : { volume: product.volume, price: product.price, inStock: product.stock });
 
   const handleAddToCart = () => {
-    addToCart(product, selectedVariant, quantity);
+    addToCart(product, activeVariant, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const currentPrice = selectedVariant.price;
-  const inStock = selectedVariant.inStock;
+  const currentPrice = activeVariant.price;
+  const inStock = activeVariant.inStock;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -149,7 +164,7 @@ export default function ProductDetailPage() {
               </label>
               <div className="flex flex-wrap gap-2.5">
                 {product.volumeVariants.map((variant) => {
-                  const isSelected = selectedVariant.volume === variant.volume;
+                  const isSelected = activeVariant.volume === variant.volume;
                   return (
                     <button
                       key={variant.volume}
@@ -176,16 +191,16 @@ export default function ProductDetailPage() {
           <div className="flex items-center gap-2 text-xs">
             {inStock > 0 ? (
               <>
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                  Skladem ({inStock} ks připraveno k expedici)
+                  Dostupné (Na objednávku – zakázkový import 12–16 dní)
                 </span>
               </>
             ) : (
               <>
-                <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
                 <span className="text-amber-700 dark:text-amber-400 font-medium">
-                  Momentálně vyprodáno
+                  Momentálně nedostupné
                 </span>
               </>
             )}
@@ -335,7 +350,7 @@ export default function ProductDetailPage() {
               <div className="py-2 flex justify-between">
                 <span className="text-neutral-500">Zvolený objem</span>
                 <span className="font-semibold text-neutral-900 dark:text-white">
-                  {selectedVariant.volume}
+                  {activeVariant.volume}
                 </span>
               </div>
               <div className="py-2 flex justify-between">
