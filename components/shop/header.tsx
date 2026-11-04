@@ -86,22 +86,24 @@ export function Header() {
             >
               Parfémy
             </Link>
-            <div className="relative group cursor-not-allowed">
-              <span className="text-neutral-400 dark:text-neutral-500 uppercase tracking-wider text-xs font-medium flex items-center gap-1.5">
-                Oblečení
-                <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded tracking-normal normal-case">
-                  Již brzy
-                </span>
+            <Link
+              href="/obleceni"
+              className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
+            >
+              Oblečení
+              <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-rose-200 dark:border-rose-800/60">
+                Coming Soon
               </span>
-            </div>
-            <div className="relative group cursor-not-allowed">
-              <span className="text-neutral-400 dark:text-neutral-500 uppercase tracking-wider text-xs font-medium flex items-center gap-1.5">
-                Boty
-                <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded tracking-normal normal-case">
-                  Již brzy
-                </span>
+            </Link>
+            <Link
+              href="/boty"
+              className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
+            >
+              Boty
+              <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-cyan-200 dark:border-cyan-800/60">
+                Coming Soon
               </span>
-            </div>
+            </Link>
             <Link
               href="/digital"
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
@@ -186,18 +188,26 @@ export function Header() {
             >
               Parfémy (Aktivní katalog)
             </Link>
-            <div className="flex items-center justify-between text-neutral-400 text-sm py-1">
+            <Link
+              href="/obleceni"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
+            >
               <span>Oblečení</span>
-              <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500">
-                Již brzy
+              <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
+                Coming Soon
               </span>
-            </div>
-            <div className="flex items-center justify-between text-neutral-400 text-sm py-1">
+            </Link>
+            <Link
+              href="/boty"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
+            >
               <span>Boty</span>
-              <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500">
-                Již brzy
+              <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800/60">
+                Coming Soon
               </span>
-            </div>
+            </Link>
             <Link
               href="/digital"
               onClick={() => setMobileMenuOpen(false)}

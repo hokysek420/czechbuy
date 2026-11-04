@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { ArrowRight, Lock, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 export function CategoryTiles() {
   return (
@@ -26,130 +25,136 @@ export function CategoryTiles() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Active Category: Parfémy */}
+          {/* Category 1: Parfémy */}
           <Link
             href="/katalog"
-            className="group relative h-96 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 block"
+            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-emerald-950/70 via-neutral-950 to-neutral-950 border border-emerald-500/25 shadow-xl hover:shadow-2xl hover:border-emerald-500/50 transition-all duration-500 block"
           >
-            <Image
-              src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1200&q=80"
-              alt="Katalog parfémů"
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            <div className="absolute top-4 right-4">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-500 text-white shadow-sm">
-                Aktivní katalog
+            {/* Ambient luxury lighting */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/35 transition-all duration-700" />
+            <div className="absolute top-1/3 -left-20 w-60 h-60 bg-amber-500/15 rounded-full blur-3xl pointer-events-none group-hover:bg-amber-500/25 transition-all duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10 flex justify-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-emerald-600 text-white shadow-md border border-emerald-400/30">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Aktivní katalog</span>
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-white">
-              <span className="text-xs uppercase tracking-widest text-neutral-300 font-medium">
+
+            <div className="relative z-10 text-white">
+              <span className="text-[11px] uppercase tracking-widest text-emerald-400 font-semibold">
                 Prémiová selekce
               </span>
-              <h3 className="text-2xl font-bold mt-1">
+              <h3 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white tracking-tight">
                 Parfémy
               </h3>
-              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed">
+              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed font-light">
                 Ikonické i niche vůně pro ženy a muže od renomovaných světových parfumérů.
               </p>
-              <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white border-b border-white pb-0.5 group-hover:gap-3 transition-all">
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300 border-b border-emerald-400/60 pb-0.5 group-hover:gap-3 transition-all">
                 <span>Objevit nabídku</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>
             </div>
           </Link>
 
-          {/* Locked Category 1: Oblečení */}
-          <div className="relative h-96 rounded-xl overflow-hidden shadow-sm select-none">
-            <Image
-              src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=80"
-              alt="Móda a oblečení"
-              fill
-              className="object-cover grayscale-50 filter contrast-90"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            {/* Elegant dark overlay */}
-            <div className="absolute inset-0 bg-neutral-950/75 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center text-white">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/20">
-                <Lock className="h-5 w-5 text-neutral-300" />
-              </div>
-              <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-400 text-neutral-950 mb-2">
-                Již brzy
-              </span>
-              <h3 className="text-2xl font-bold text-white">
-                Oblečení
-              </h3>
-              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed">
-                Připravujeme pro vás kurátorský výběr evropských módních značek a streetwearu.
-              </p>
-              <div className="mt-4 text-[11px] uppercase tracking-wider text-neutral-400 font-medium border border-neutral-600/60 rounded px-3 py-1.5 bg-black/30">
-                Spuštění sekce plánováno
-              </div>
-            </div>
-          </div>
-
-          {/* Locked Category 2: Boty */}
-          <div className="relative h-96 rounded-xl overflow-hidden shadow-sm select-none">
-            <Image
-              src="https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=1200&q=80"
-              alt="Obuv a tenisky"
-              fill
-              className="object-cover grayscale-50 filter contrast-90"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            {/* Elegant dark overlay */}
-            <div className="absolute inset-0 bg-neutral-950/75 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 text-center text-white">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-4 border border-white/20">
-                <Lock className="h-5 w-5 text-neutral-300" />
-              </div>
-              <span className="inline-block px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-400 text-neutral-950 mb-2">
-                Již brzy
-              </span>
-              <h3 className="text-2xl font-bold text-white">
-                Boty & Tenisky
-              </h3>
-              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed">
-                Limitované edice tenisek a nadčasová obuv pro každou příležitost.
-              </p>
-              <div className="mt-4 text-[11px] uppercase tracking-wider text-neutral-400 font-medium border border-neutral-600/60 rounded px-3 py-1.5 bg-black/30">
-                Spuštění sekce plánováno
-              </div>
-            </div>
-          </div>
-
-          {/* New Category: Digital (Coming Soon) */}
+          {/* Category 2: Oblečení (Coming Soon) */}
           <Link
-            href="/digital"
-            className="group relative h-96 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 block"
+            href="/obleceni"
+            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-rose-950/70 via-neutral-950 to-neutral-950 border border-rose-500/25 shadow-xl hover:shadow-2xl hover:border-rose-500/50 transition-all duration-500 block"
           >
-            <Image
-              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80"
-              alt="CzechBuy Digital"
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-            />
-            {/* Ambient cyber overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/95 via-neutral-950/40 to-neutral-950/20" />
-            <div className="absolute top-4 right-4">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-md border border-purple-400/30">
+            {/* Ambient street/fashion lighting */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-rose-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-500/35 transition-all duration-700" />
+            <div className="absolute top-1/3 -left-20 w-60 h-60 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none group-hover:bg-indigo-500/30 transition-all duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10 flex justify-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-rose-600 text-white shadow-md border border-rose-400/30">
                 <Sparkles className="h-2.5 w-2.5" />
                 <span>Coming Soon</span>
               </span>
             </div>
-            <div className="absolute bottom-6 left-6 right-6 text-white">
-              <span className="text-xs uppercase tracking-widest text-purple-300 font-medium">
+
+            <div className="relative z-10 text-white">
+              <span className="text-[11px] uppercase tracking-widest text-rose-400 font-semibold">
+                Móda & Streetwear
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white tracking-tight">
+                Oblečení
+              </h3>
+              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed font-light">
+                Limitované dropy, prémiový streetwear a kurátorský výběr evropských módních značek.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-rose-300 border-b border-rose-400/60 pb-0.5 group-hover:gap-3 transition-all">
+                <span>Zobrazit podrobnosti</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Category 3: Boty (Coming Soon) */}
+          <Link
+            href="/boty"
+            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-cyan-950/70 via-neutral-950 to-neutral-950 border border-cyan-500/25 shadow-xl hover:shadow-2xl hover:border-cyan-500/50 transition-all duration-500 block"
+          >
+            {/* Ambient sneakerhead lighting */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/35 transition-all duration-700" />
+            <div className="absolute top-1/3 -left-20 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl pointer-events-none group-hover:bg-blue-600/30 transition-all duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10 flex justify-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-cyan-600 text-white shadow-md border border-cyan-400/30">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Coming Soon</span>
+              </span>
+            </div>
+
+            <div className="relative z-10 text-white">
+              <span className="text-[11px] uppercase tracking-widest text-cyan-400 font-semibold">
+                Sneakers & Obuv
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white tracking-tight">
+                Boty & Tenisky
+              </h3>
+              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed font-light">
+                Limitované edice tenisek, deadstock releasy a nadčasová obuv pro každou příležitost.
+              </p>
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-300 border-b border-cyan-400/60 pb-0.5 group-hover:gap-3 transition-all">
+                <span>Zobrazit podrobnosti</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </Link>
+
+          {/* Category 4: Digital (Coming Soon) */}
+          <Link
+            href="/digital"
+            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-purple-950/70 via-neutral-950 to-neutral-950 border border-purple-500/25 shadow-xl hover:shadow-2xl hover:border-purple-500/50 transition-all duration-500 block"
+          >
+            {/* Ambient cyber lighting matching user screenshot */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-500/35 transition-all duration-700" />
+            <div className="absolute top-1/3 -left-20 w-60 h-60 bg-teal-500/20 rounded-full blur-3xl pointer-events-none group-hover:bg-teal-500/30 transition-all duration-700" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent pointer-events-none" />
+
+            <div className="relative z-10 flex justify-end">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-purple-600 text-white shadow-md border border-purple-400/30">
+                <Sparkles className="h-2.5 w-2.5" />
+                <span>Coming Soon</span>
+              </span>
+            </div>
+
+            <div className="relative z-10 text-white">
+              <span className="text-[11px] uppercase tracking-widest text-purple-300 font-semibold">
                 Digitální sekce
               </span>
-              <h3 className="text-2xl font-bold mt-1 text-white">
+              <h3 className="text-2xl sm:text-3xl font-extrabold mt-1 text-white tracking-tight">
                 Digital
               </h3>
-              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed">
+              <p className="text-xs text-neutral-300 mt-2 max-w-xs leading-relaxed font-light">
                 Herní klíče, licence, předplatné a vouchery s okamžitým doručením.
               </p>
-              <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-purple-300 border-b border-purple-400/60 pb-0.5 group-hover:gap-3 transition-all">
+              <div className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-purple-300 border-b border-purple-400/60 pb-0.5 group-hover:gap-3 transition-all">
                 <span>Zobrazit podrobnosti</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </div>

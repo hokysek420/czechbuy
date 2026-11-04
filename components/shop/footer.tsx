@@ -142,11 +142,27 @@ export function Footer() {
                   Unisex & Niche
                 </Link>
               </li>
-              <li className="pt-2 text-neutral-400 dark:text-neutral-600 cursor-not-allowed">
-                Oblečení (Připravujeme)
+              <li className="pt-1">
+                <Link
+                  href="/obleceni"
+                  className="inline-flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                >
+                  <span>Oblečení</span>
+                  <span className="text-[9px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-1.5 py-0.2 rounded border border-rose-200 dark:border-rose-800/60">
+                    Coming Soon
+                  </span>
+                </Link>
               </li>
-              <li className="text-neutral-400 dark:text-neutral-600 cursor-not-allowed">
-                Obuv (Připravujeme)
+              <li>
+                <Link
+                  href="/boty"
+                  className="inline-flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                >
+                  <span>Boty & Tenisky</span>
+                  <span className="text-[9px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-1.5 py-0.2 rounded border border-cyan-200 dark:border-cyan-800/60">
+                    Coming Soon
+                  </span>
+                </Link>
               </li>
               <li>
                 <Link
