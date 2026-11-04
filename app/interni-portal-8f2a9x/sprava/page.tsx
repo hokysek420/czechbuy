@@ -22,7 +22,12 @@ import {
   Clock,
   Sparkles,
   SlidersHorizontal,
+  Send,
+  Radio,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { Product, Order, OrderStatus, FragranceConcentration, FragranceGender } from "@/types";
 import {
   getInitialProducts,
@@ -44,10 +49,24 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"products" | "countdown" | "orders">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "countdown" | "orders" | "discord">("products");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Discord webhook status & test state
+  const [discordInfo, setDiscordInfo] = useState<{
+    configured: boolean;
+    inviteUrl: string;
+    instagramUrl: string;
+    channelName: string;
+    message?: string;
+  } | null>(null);
+  const [isTestingDiscord, setIsTestingDiscord] = useState(false);
+  const [discordTestResult, setDiscordTestResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   // Search & filter
   const [orderSearch, setOrderSearch] = useState("");
@@ -134,7 +153,46 @@ export default function AdminDashboardPage() {
     });
     setEditingProducts(initialEdits);
     setIsLoaded(true);
+
+    // Fetch Discord webhook configuration status
+    fetch("/api/admin/discord-status")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setDiscordInfo(data);
+      })
+      .catch(() => {});
   }, []);
+
+  const handleTestDiscordWebhook = async () => {
+    setIsTestingDiscord(true);
+    setDiscordTestResult(null);
+
+    try {
+      const res = await fetch("/api/admin/discord-test", {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setDiscordTestResult({
+          success: true,
+          message: data.message || "Testovací embed byl úspěšně odeslán do Discord kanálu!",
+        });
+      } else {
+        setDiscordTestResult({
+          success: false,
+          message: data.error || "Odeslání testovací zprávy selhalo. Zkontrolujte URL webhooku.",
+        });
+      }
+    } catch {
+      setDiscordTestResult({
+        success: false,
+        message: "Chyba při komunikaci se serverem.",
+      });
+    } finally {
+      setIsTestingDiscord(false);
+    }
+  };
 
   const handleOpenEditProduct = (p: Product) => {
     setEditingProductData({
@@ -537,6 +595,23 @@ export default function AdminDashboardPage() {
             <ShoppingBag className="h-4 w-4" />
             <span>Správa objednávek ({orders.length})</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("discord")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "discord"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <DiscordIcon className="h-4 w-4" />
+            <span>Discord Webhook</span>
+            {discordInfo?.configured ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-500" title="Webhook aktivní" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Webhook nenastaven v .env" />
+            )}
+          </button>
         </div>
 
         {/* Tab 1: Orders Management */}
@@ -921,6 +996,187 @@ export default function AdminDashboardPage() {
                 )}
               </div>
             </form>
+          </div>
+        )}
+
+        {/* Tab 4: Discord Bot & Live Order Webhook Integration */}
+        {activeTab === "discord" && (
+          <div className="space-y-6">
+            {/* Header info card */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[#5865F2] text-white flex items-center justify-center shadow-md shrink-0">
+                    <DiscordIcon className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-neutral-900 dark:text-white">
+                        Discord Bot & Webhook Integrace
+                      </h2>
+                      {discordInfo?.configured ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold px-2.5 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                          <CheckCircle2 className="h-3 w-3" />
+                          Aktivní
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 font-semibold px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                          <AlertCircle className="h-3 w-3" />
+                          Vyžaduje konfiguraci
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Automatické odesílání bohatých embed zpráv o nových objednávkách do privátního kanálu <code className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono text-neutral-800 dark:text-neutral-200">#live-objednávky</code>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <a
+                    href={discordInfo?.inviteUrl || "https://discord.gg/czechbuy"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold text-xs transition shadow-xs"
+                  >
+                    <DiscordIcon className="h-4 w-4" />
+                    <span>Otevřít Discord Server</span>
+                    <ExternalLink className="h-3 w-3 opacity-80" />
+                  </a>
+
+                  <a
+                    href={discordInfo?.instagramUrl || "https://www.instagram.com/czech.buy/"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-semibold text-xs transition border border-neutral-200 dark:border-neutral-700"
+                  >
+                    <InstagramIcon className="h-4 w-4 text-[#E1306C]" />
+                    <span>Instagram</span>
+                    <ExternalLink className="h-3 w-3 opacity-80" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Status details grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 text-xs">
+                <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-1">
+                  <span className="text-neutral-500 uppercase tracking-wider text-[10px] font-bold block">
+                    Cílový kanál na Discordu
+                  </span>
+                  <p className="font-mono font-bold text-neutral-900 dark:text-white text-sm flex items-center gap-1.5">
+                    <Radio className="h-3.5 w-3.5 text-[#5865F2]" />
+                    <span>#live-objednávky</span>
+                  </p>
+                  <p className="text-[11px] text-neutral-400">
+                    Privátní kanál pro administrátory a expediční tým
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-1">
+                  <span className="text-neutral-500 uppercase tracking-wider text-[10px] font-bold block">
+                    Vzhled Embed notifikace
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-3.5 h-3.5 rounded-full bg-[#E11D48] inline-block shadow-xs" />
+                    <span className="font-semibold text-neutral-900 dark:text-white">
+                      CzechBuy Sleek Red (#E11D48)
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400">
+                    Rozpis položek, cena v Kč, Zásilkovna bod, jméno & kontakt
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-1">
+                  <span className="text-neutral-500 uppercase tracking-wider text-[10px] font-bold block">
+                    Stav Webhook URL
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        discordInfo?.configured ? "bg-emerald-500" : "bg-amber-500 animate-pulse"
+                      }`}
+                    />
+                    <span className="font-semibold text-neutral-900 dark:text-white">
+                      {discordInfo?.configured
+                        ? "DISCORD_ORDER_WEBHOOK_URL nastaven"
+                        : "Proměnná prostředí chybí"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400">
+                    {discordInfo?.configured
+                      ? "Systém je připraven pro ostrý provoz"
+                      : "Doplňte do .env.local nebo nastavení Vercelu"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Interactive Webhook Test Section */}
+              <div className="mt-6 pt-6 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
+                      Otestovat živý Discord webhook
+                    </h4>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Odešle ukázkovou objednávku přímo do kanálu <code className="font-mono">#live-objednávky</code> pro ověření spojení.
+                    </p>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={handleTestDiscordWebhook}
+                    disabled={isTestingDiscord}
+                    className="inline-flex items-center gap-2 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold text-xs shadow-sm shrink-0"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                    <span>{isTestingDiscord ? "Odesílám test..." : "Odeslat testovací embed"}</span>
+                  </Button>
+                </div>
+
+                {discordTestResult && (
+                  <div
+                    className={`p-3.5 rounded-lg text-xs flex items-center gap-2.5 animate-in fade-in duration-200 ${
+                      discordTestResult.success
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                        : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800"
+                    }`}
+                  >
+                    {discordTestResult.success ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+                    )}
+                    <span>{discordTestResult.message}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Configuration instructions card */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-4 text-xs">
+              <h3 className="font-bold text-sm text-neutral-900 dark:text-white">
+                Návod na propojení Discord Webhooku (Checklist proměnných prostředí)
+              </h3>
+              <ol className="list-decimal list-inside space-y-2 text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                <li>
+                  Na vašem Discord serveru klikněte na kanál <strong>#live-objednávky</strong> → <em>Nastavení kanálu (Ozubené kolečko)</em> → <strong>Integrace</strong> → <strong>Webhooky</strong>.
+                </li>
+                <li>
+                  Vytvořte nový webhook, pojmenujte ho např. <strong>CzechBuy Live Sync</strong> a zkopírujte jeho URL adresu.
+                </li>
+                <li>
+                  Vložte získanou URL do souboru <code className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded font-mono text-neutral-900 dark:text-white">.env.local</code> nebo do <em>Environment Variables</em> v administraci Vercelu:
+                </li>
+              </ol>
+
+              <div className="bg-neutral-950 text-neutral-200 p-4 rounded-xl font-mono text-[11px] overflow-x-auto border border-neutral-800">
+                <p className="text-neutral-500"># Discord Webhook & Social Environment Variables</p>
+                <p><span className="text-pink-400">DISCORD_ORDER_WEBHOOK_URL</span>=https://discord.com/api/webhooks/131.../...</p>
+                <p><span className="text-sky-400">NEXT_PUBLIC_DISCORD_INVITE_URL</span>=https://discord.gg/czechbuy</p>
+                <p><span className="text-amber-400">NEXT_PUBLIC_INSTAGRAM_URL</span>=https://www.instagram.com/czech.buy/</p>
+              </div>
+            </div>
           </div>
         )}
       </main>

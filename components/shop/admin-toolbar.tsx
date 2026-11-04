@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   ExternalLink,
 } from "lucide-react";
+import { DiscordIcon } from "@/components/ui/social-icons";
 
 export function AdminToolbar() {
   const router = useRouter();
@@ -20,6 +21,10 @@ export function AdminToolbar() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [discordStatus, setDiscordStatus] = useState<{
+    configured: boolean;
+    inviteUrl?: string;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +38,20 @@ export function AdminToolbar() {
             item.startsWith("czechbuy_admin_token=")
         );
       setIsAdmin(hasCookie);
+
+      if (hasCookie) {
+        fetch("/api/admin/discord-status")
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data) {
+              setDiscordStatus({
+                configured: data.configured,
+                inviteUrl: data.inviteUrl,
+              });
+            }
+          })
+          .catch(() => {});
+      }
 
       const savedMinimized = sessionStorage.getItem("czechbuy_admin_toolbar_minimized");
       if (savedMinimized === "true") {
@@ -108,14 +127,52 @@ export function AdminToolbar() {
             <span className="font-bold text-amber-400 tracking-tight">
               Režim správce (Náhled webu)
             </span>
-            <span className="hidden md:inline-block text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700">
+            <span className="hidden lg:inline-block text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700">
               Veřejnost vidí odpočet
             </span>
+
+            {/* Discord Webhook Status Indicator */}
+            {discordStatus && (
+              <div
+                className={`hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono border ${
+                  discordStatus.configured
+                    ? "bg-emerald-950/60 border-emerald-700/60 text-emerald-300"
+                    : "bg-amber-950/60 border-amber-700/60 text-amber-300"
+                }`}
+                title={
+                  discordStatus.configured
+                    ? "DISCORD_ORDER_WEBHOOK_URL je aktivní a propojen"
+                    : "Upozornění: DISCORD_ORDER_WEBHOOK_URL není v .env nastaven"
+                }
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    discordStatus.configured ? "bg-emerald-400" : "bg-amber-400 animate-pulse"
+                  }`}
+                />
+                <span>
+                  {discordStatus.configured ? "Webhook OK" : "Webhook nenastaven"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Discord Server Quick-Link */}
+          <a
+            href={discordStatus?.inviteUrl || process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#5865F2]/20 hover:bg-[#5865F2]/30 text-[#7983F5] hover:text-white border border-[#5865F2]/30 transition text-xs font-semibold active:scale-[0.98]"
+            title="Otevřít oficiální CzechBuy Discord server (#live-objednávky)"
+          >
+            <DiscordIcon className="h-3.5 w-3.5" />
+            <span className="hidden md:inline">Discord</span>
+            <ExternalLink className="h-3 w-3 opacity-60" />
+          </a>
+
           {/* Quick link: Open Admin Panel */}
           <Link
             href="/interni-portal-8f2a9x/sprava"

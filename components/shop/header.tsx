@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, Sparkles, ShieldCheck } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, Sparkles, ShieldCheck, ExternalLink } from "lucide-react";
+import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { useCart } from "@/lib/cart-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -36,6 +37,16 @@ export function Header() {
             <ShieldCheck className="h-3 w-3 text-emerald-400" />
             <span>100% originální parfémy z ověřené evropské distribuce</span>
           </span>
+          <span className="hidden lg:inline text-neutral-500">•</span>
+          <a
+            href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden lg:inline-flex items-center gap-1.5 text-neutral-300 hover:text-white transition-colors group"
+          >
+            <DiscordIcon className="h-3 w-3 text-[#5865F2] group-hover:scale-110 transition-transform" />
+            <span className="underline decoration-neutral-600 underline-offset-2">Discord Komunita</span>
+          </a>
         </div>
       </div>
 
@@ -109,7 +120,18 @@ export function Header() {
           </form>
 
           {/* Action icons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Discord direct link icon */}
+            <a
+              href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-[#5865F2] dark:hover:text-[#5865F2] rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none"
+              title="Připojit se k CzechBuy Fam na Discordu"
+            >
+              <DiscordIcon className="h-4 w-4" />
+            </a>
+
             <ThemeToggle />
 
             {/* Cart trigger button */}
@@ -166,6 +188,37 @@ export function Header() {
               <span className="text-[10px] bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500">
                 Již brzy
               </span>
+            </div>
+
+            {/* Mobile Discord & Instagram Community Links */}
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#5865F2]/10 text-[#5865F2] font-semibold text-xs hover:bg-[#5865F2]/20 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <DiscordIcon className="h-4 w-4" />
+                  <span>Připoj se na CzechBuy Discord</span>
+                </div>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+
+              <a
+                href={process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/czech.buy/"}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3 py-2 rounded-lg bg-neutral-100 dark:bg-neutral-900 text-neutral-900 dark:text-white font-semibold text-xs hover:text-[#E1306C] transition"
+              >
+                <div className="flex items-center gap-2">
+                  <InstagramIcon className="h-4 w-4 text-[#E1306C]" />
+                  <span>Sledovat Instagram @czech.buy</span>
+                </div>
+                <ExternalLink className="h-3 w-3" />
+              </a>
             </div>
           </div>
           <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 text-xs text-neutral-500 space-y-2">

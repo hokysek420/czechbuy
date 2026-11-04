@@ -11,7 +11,9 @@ import {
   CheckCircle2,
   Lock,
   ArrowRight,
+  ExternalLink,
 } from "lucide-react";
+import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   getCountdownConfig,
@@ -251,6 +253,33 @@ export default function ComingSoonCountdownPage() {
                 )}
               </form>
             )}
+
+            {/* Discord & Instagram Community CTA under newsletter */}
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              <a
+                href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 text-[#5865F2] text-xs font-semibold transition group"
+              >
+                <DiscordIcon className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                <span>Připoj se k CzechBuy Fam na Discordu</span>
+                <span className="flex h-1.5 w-1.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+              </a>
+
+              <a
+                href={process.env.NEXT_PUBLIC_INSTAGRAM_URL || "https://www.instagram.com/czech.buy/"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:text-[#E1306C] text-xs font-medium transition"
+              >
+                <InstagramIcon className="h-3.5 w-3.5 text-[#E1306C]" />
+                <span>@czech.buy</span>
+              </a>
+            </div>
           </div>
 
           {/* 3 Core Trust Pillars */}
