@@ -63,7 +63,7 @@ export default function AdminLoginPage() {
 
       {/* Login Box */}
       <div className="max-w-md w-full mx-auto my-auto">
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-8 shadow-xl">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-xl">
           <div className="text-center mb-6">
             <div className="w-12 h-12 rounded-xl bg-neutral-900 dark:bg-neutral-800 text-white dark:text-neutral-100 flex items-center justify-center mx-auto mb-3 shadow-sm">
               <Lock className="h-6 w-6" />

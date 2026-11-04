@@ -150,7 +150,7 @@ export function CategoryCatalogView({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 p-12 text-center max-w-xl mx-auto my-8">
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/40 p-6 sm:p-12 text-center max-w-xl mx-auto my-8">
           <div className="w-16 h-16 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center mx-auto mb-4 text-neutral-400 shadow-xs">
             <IconComponent className="h-8 w-8 text-neutral-600 dark:text-neutral-300" />
           </div>

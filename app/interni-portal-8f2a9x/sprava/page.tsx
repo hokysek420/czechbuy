@@ -814,66 +814,66 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* Tab Controls */}
-        <div className="flex border-b border-neutral-200 dark:border-neutral-800 gap-6">
+        {/* Tab Controls (Horizontally scrollable on phones & laptops) */}
+        <div className="flex items-center border-b border-neutral-200 dark:border-neutral-800 gap-3 sm:gap-6 overflow-x-auto scrollbar-none pb-px -mb-px">
           <button
             type="button"
             onClick={() => setActiveTab("products")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === "products"
                 ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
                 : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
           >
-            <Boxes className="h-4 w-4" />
-            <span>Katalog produktů & Sklad ({products.length})</span>
+            <Boxes className="h-4 w-4 shrink-0" />
+            <span>Katalog & Sklad ({products.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("categories")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === "categories"
                 ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
                 : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
           >
-            <Sparkles className="h-4 w-4 text-purple-500" />
+            <Sparkles className="h-4 w-4 text-purple-500 shrink-0" />
             <span>Spuštění kategorií & Coming Soon</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("countdown")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === "countdown"
                 ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
                 : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
           >
-            <Clock className="h-4 w-4" />
-            <span>Nastavení odpočtu a spuštění</span>
+            <Clock className="h-4 w-4 shrink-0" />
+            <span>Nastavení odpočtu</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("orders")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === "orders"
                 ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
                 : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
           >
-            <ShoppingBag className="h-4 w-4" />
-            <span>Správa objednávek ({orders.length})</span>
+            <ShoppingBag className="h-4 w-4 shrink-0" />
+            <span>Objednávky ({orders.length})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("discord")}
-            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+            className={`pb-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 shrink-0 whitespace-nowrap ${
               activeTab === "discord"
                 ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
                 : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
             }`}
           >
-            <DiscordIcon className="h-4 w-4" />
+            <DiscordIcon className="h-4 w-4 shrink-0" />
             <span>Discord Webhook</span>
             {discordInfo?.configured ? (
               <span className="w-2 h-2 rounded-full bg-emerald-500" title="Webhook aktivní" />
@@ -903,10 +903,15 @@ export default function AdminDashboardPage() {
               </span>
             </div>
 
+            {/* Mobile Scroll Hint */}
+            <p className="sm:hidden text-[11px] text-neutral-400 text-right">
+              ← Tažením do stran zobrazíte všechny údaje →
+            </p>
+
             {/* Orders Table */}
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
+                <table className="w-full min-w-[760px] text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
                   <thead className="bg-neutral-50 dark:bg-neutral-950/60 uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">
                     <tr>
                       <th className="py-3 px-4">Objednávka</th>
@@ -1083,10 +1088,15 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
+            {/* Mobile Scroll Hint */}
+            <p className="sm:hidden text-[11px] text-neutral-400 text-right">
+              ← Tažením do stran upravíte cenu a sklad položek →
+            </p>
+
             {/* Products Table */}
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-xs">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
+                <table className="w-full min-w-[780px] text-left text-xs divide-y divide-neutral-200 dark:divide-neutral-800">
                   <thead className="bg-neutral-50 dark:bg-neutral-950/60 uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">
                     <tr>
                       <th className="py-3 px-4 w-14">Foto</th>
@@ -1312,7 +1322,7 @@ export default function AdminDashboardPage() {
                       ? "Kategorie je aktivní: zákazníci mohou prohlížet flakony a vkládat je do košíku."
                       : "Kategorie je označena jako Coming Soon: na webu je viditelná se štítkem Již brzy."}
                   </p>
-                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
                     <Link href="/katalog" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
                       <span>Zobrazit na webu</span>
                       <ExternalLink className="h-3 w-3" />
@@ -1321,7 +1331,7 @@ export default function AdminDashboardPage() {
                       size="sm"
                       variant={categoryStatus.parfemy ? "outline" : "primary"}
                       onClick={() => handleToggleCategory("parfemy")}
-                      className="text-xs uppercase tracking-wider font-semibold"
+                      className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
                       {categoryStatus.parfemy ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
                     </Button>
@@ -1353,7 +1363,7 @@ export default function AdminDashboardPage() {
                       ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat streetwear a módu."
                       : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
                   </p>
-                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
                     <Link href="/obleceni" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
                       <span>Zobrazit na webu</span>
                       <ExternalLink className="h-3 w-3" />
@@ -1362,7 +1372,7 @@ export default function AdminDashboardPage() {
                       size="sm"
                       variant={categoryStatus.obleceni ? "outline" : "primary"}
                       onClick={() => handleToggleCategory("obleceni")}
-                      className="text-xs uppercase tracking-wider font-semibold"
+                      className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
                       {categoryStatus.obleceni ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
                     </Button>
@@ -1394,7 +1404,7 @@ export default function AdminDashboardPage() {
                       ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat tenisky a sneakers."
                       : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
                   </p>
-                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
                     <Link href="/boty" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
                       <span>Zobrazit na webu</span>
                       <ExternalLink className="h-3 w-3" />
@@ -1403,7 +1413,7 @@ export default function AdminDashboardPage() {
                       size="sm"
                       variant={categoryStatus.boty ? "outline" : "primary"}
                       onClick={() => handleToggleCategory("boty")}
-                      className="text-xs uppercase tracking-wider font-semibold"
+                      className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
                       {categoryStatus.boty ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
                     </Button>
@@ -1435,7 +1445,7 @@ export default function AdminDashboardPage() {
                       ? "Kategorie je aktivní: zákazníci mohou okamžitě nakupovat herní klíče a licence."
                       : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k dropům."}
                   </p>
-                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                  <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
                     <Link href="/digital" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
                       <span>Zobrazit na webu</span>
                       <ExternalLink className="h-3 w-3" />
@@ -1444,7 +1454,7 @@ export default function AdminDashboardPage() {
                       size="sm"
                       variant={categoryStatus.digital ? "outline" : "primary"}
                       onClick={() => handleToggleCategory("digital")}
-                      className="text-xs uppercase tracking-wider font-semibold"
+                      className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
                       {categoryStatus.digital ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
                     </Button>
@@ -1853,7 +1863,7 @@ export default function AdminDashboardPage() {
             <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
               Kategorie produktu *
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() =>
@@ -2361,7 +2371,7 @@ export default function AdminDashboardPage() {
             <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
               Kategorie produktu *
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() =>

@@ -51,14 +51,14 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 shadow-2xl transition-all duration-200",
+          "relative z-10 w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-5 sm:p-6 shadow-2xl transition-all duration-200",
           className
         )}
       >
-        <div className="flex items-start justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="flex items-start justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800 shrink-0">
           <div>
             {title && (
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              <h2 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-neutral-100">
                 {title}
               </h2>
             )}
@@ -71,14 +71,16 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            className="rounded-lg p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors shrink-0 ml-2"
             aria-label="Zavřít"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-4">{children}</div>
+        <div className="mt-4 overflow-y-auto flex-1 pr-1 overscroll-contain">
+          {children}
+        </div>
       </div>
     </div>
   );

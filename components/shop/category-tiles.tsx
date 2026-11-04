@@ -33,7 +33,7 @@ export function CategoryTiles() {
           {/* Category 1: Parfémy */}
           <Link
             href="/katalog"
-            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-emerald-950/70 via-neutral-950 to-neutral-950 border border-emerald-500/25 shadow-xl hover:shadow-2xl hover:border-emerald-500/50 transition-all duration-500 block"
+            className="group relative h-[390px] sm:h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-emerald-950/70 via-neutral-950 to-neutral-950 border border-emerald-500/25 shadow-xl hover:shadow-2xl hover:border-emerald-500/50 transition-all duration-500 block"
           >
             {/* Ambient luxury lighting */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/35 transition-all duration-700" />
@@ -71,7 +71,7 @@ export function CategoryTiles() {
           {/* Category 2: Oblečení */}
           <Link
             href="/obleceni"
-            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-rose-950/70 via-neutral-950 to-neutral-950 border border-rose-500/25 shadow-xl hover:shadow-2xl hover:border-rose-500/50 transition-all duration-500 block"
+            className="group relative h-[390px] sm:h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-rose-950/70 via-neutral-950 to-neutral-950 border border-rose-500/25 shadow-xl hover:shadow-2xl hover:border-rose-500/50 transition-all duration-500 block"
           >
             {/* Ambient street/fashion lighting */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-rose-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-rose-500/35 transition-all duration-700" />
@@ -109,7 +109,7 @@ export function CategoryTiles() {
           {/* Category 3: Boty */}
           <Link
             href="/boty"
-            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-cyan-950/70 via-neutral-950 to-neutral-950 border border-cyan-500/25 shadow-xl hover:shadow-2xl hover:border-cyan-500/50 transition-all duration-500 block"
+            className="group relative h-[390px] sm:h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-cyan-950/70 via-neutral-950 to-neutral-950 border border-cyan-500/25 shadow-xl hover:shadow-2xl hover:border-cyan-500/50 transition-all duration-500 block"
           >
             {/* Ambient sneakerhead lighting */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-cyan-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/35 transition-all duration-700" />
@@ -147,7 +147,7 @@ export function CategoryTiles() {
           {/* Category 4: Digital */}
           <Link
             href="/digital"
-            className="group relative h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-purple-950/70 via-neutral-950 to-neutral-950 border border-purple-500/25 shadow-xl hover:shadow-2xl hover:border-purple-500/50 transition-all duration-500 block"
+            className="group relative h-[390px] sm:h-[420px] rounded-3xl overflow-hidden p-6 sm:p-7 flex flex-col justify-between bg-gradient-to-b from-purple-950/70 via-neutral-950 to-neutral-950 border border-purple-500/25 shadow-xl hover:shadow-2xl hover:border-purple-500/50 transition-all duration-500 block"
           >
             {/* Ambient cyber lighting matching user screenshot */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-500/25 rounded-full blur-3xl pointer-events-none group-hover:bg-purple-500/35 transition-all duration-700" />
