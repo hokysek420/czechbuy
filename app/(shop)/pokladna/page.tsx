@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { useCart } from "@/lib/cart-context";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
 import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ShippingMethod, PaymentMethod, Order } from "@/types";
@@ -51,6 +52,29 @@ type CheckoutFormData = z.infer<typeof checkoutSchema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
+  const { user: discordUser, isLoggedIn: isDiscordLoggedIn, logout: discordLogout } = useDiscordAuth();
+
+  React.useEffect(() => {
+    if (discordUser) {
+      setFormData((prev) => {
+        const updates: Partial<CheckoutFormData> = {};
+        if (!prev.email && discordUser.email) {
+          updates.email = discordUser.email;
+        }
+        if (!prev.firstName) {
+          const fullName = discordUser.global_name || discordUser.username || "";
+          const parts = fullName.trim().split(" ");
+          if (parts.length > 1) {
+            updates.firstName = parts[0];
+            if (!prev.lastName) updates.lastName = parts.slice(1).join(" ");
+          } else if (fullName) {
+            updates.firstName = fullName;
+          }
+        }
+        return Object.keys(updates).length > 0 ? { ...prev, ...updates } : prev;
+      });
+    }
+  }, [discordUser]);
 
   const [formData, setFormData] = useState<Partial<CheckoutFormData>>({
     firstName: "",
@@ -143,6 +167,8 @@ export default function CheckoutPage() {
           zip: result.data.zip,
           country: "Česká republika",
           note: result.data.note,
+          discordUsername: discordUser?.username,
+          discordId: discordUser?.id,
         },
         items: [...items],
         shippingMethod,
@@ -344,6 +370,66 @@ export default function CheckoutPage() {
                 </span>
                 <span>Doručovací a kontaktní údaje</span>
               </h2>
+
+{/* Discord Profile Pre-fill & Loyalty Banner */}
+              {isDiscordLoggedIn && discordUser ? (
+                <div className="mb-5 p-3.5 rounded-xl bg-gradient-to-r from-[#5865F2]/10 via-[#5865F2]/5 to-transparent border border-[#5865F2]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={discordUser.avatarUrl}
+                      alt={discordUser.username}
+                      className="w-9 h-9 rounded-full ring-2 ring-[#5865F2]/40"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-neutral-900 dark:text-white">
+                          @{discordUser.username}
+                        </span>
+                        {discordUser.isCzechBuyFam && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[#5865F2] text-white px-2 py-0.5 rounded-full">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            CzechBuy Fam
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Údaje byly automaticky propojeny s tvým Discord profilem
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => discordLogout()}
+                    className="text-[11px] font-medium text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 underline self-start sm:self-auto"
+                  >
+                    Odhlásit
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-5 p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-[#5865F2] text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <DiscordIcon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900 dark:text-white">
+                        Máš Discord účet?
+                      </p>
+                      <p className="text-[11px] text-neutral-500">
+                        Přihlas se pro 1-klikové předvyplnění údajů a VIP status v komunitě.
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/prihlaseni?redirect=/pokladna"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition shrink-0"
+                  >
+                    <DiscordIcon className="h-3.5 w-3.5" />
+                    <span>Přihlásit přes Discord</span>
+                  </Link>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>

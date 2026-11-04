@@ -84,6 +84,8 @@ export interface CustomerDetails {
   zip: string;
   country: string;
   note?: string;
+  discordUsername?: string;
+  discordId?: string;
 }
 
 export interface Order {
@@ -98,4 +100,18 @@ export interface Order {
   subtotal: number;
   totalPrice: number;
   status: OrderStatus;
+}
+
+
+export interface DiscordUser {
+  id: string;
+  username: string;
+  global_name?: string | null;
+  discriminator?: string;
+  avatar?: string | null;
+  avatarUrl: string;
+  email?: string | null;
+  verified?: boolean;
+  isCzechBuyFam?: boolean;
+  joinedAt?: string;
 }

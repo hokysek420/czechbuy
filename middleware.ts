@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "czechbuy_admin_session";
 const ADMIN_COOKIE_NAME = "czechbuy_admin_token";
+const DISCORD_USER_COOKIE = "czechbuy_discord_user";
 const ADMIN_BASE_PATH = "/interni-portal-8f2a9x";
 const COUNTDOWN_PATH = "/brzy-otevirame";
 
@@ -22,10 +23,10 @@ export function middleware(request: NextRequest) {
   }
 
   // Check admin authorization cookie (supporting czechbuy_admin_session & legacy czechbuy_admin_token)
-  const token =
+  const adminToken =
     request.cookies.get(ADMIN_SESSION_COOKIE)?.value ||
     request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const isAuthenticatedAdmin = Boolean(token && token.trim().length > 0);
+  const isAuthenticatedAdmin = Boolean(adminToken && adminToken.trim().length > 0);
 
   // 2. Scenario: Authenticated Administrator
   if (isAuthenticatedAdmin) {
@@ -39,7 +40,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 3. Scenario: Public Visitor / Unauthenticated
+  // 3. Scenario: Public Visitor / Unauthenticated Admin Area
   // Hidden admin login page must remain accessible so the admin can log in
   if (pathname === `${ADMIN_BASE_PATH}/login`) {
     return NextResponse.next();
@@ -51,13 +52,26 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // 4. Scenario: Discord Login pages (/prihlaseni, /prihlaseni/callback)
+  if (pathname.startsWith("/prihlaseni")) {
+    return NextResponse.next();
+  }
+
+  // Check Discord user authentication cookie
+  const discordUserCookie = request.cookies.get(DISCORD_USER_COOKIE)?.value;
+  const isAuthenticatedDiscordUser = Boolean(discordUserCookie && discordUserCookie.trim().length > 0);
+
+  // Authenticated Discord users get access to the store
+  if (isAuthenticatedDiscordUser) {
+    return NextResponse.next();
+  }
+
   // If already on the countdown page, allow
   if (pathname === COUNTDOWN_PATH) {
     return NextResponse.next();
   }
 
-  // All other public routes (/, /katalog, /produkt/*, /kosik, /pokladna, /faq, etc.)
-  // are locked and redirected to the Countdown / Maintenance page
+  // All other public routes are locked and redirected to the Countdown / Maintenance page
   const countdownUrl = new URL(COUNTDOWN_PATH, request.url);
   return NextResponse.redirect(countdownUrl);
 }

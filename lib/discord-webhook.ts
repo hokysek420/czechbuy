@@ -85,6 +85,7 @@ export async function sendDiscordOrderNotification(
   const customerName = `${order.customer.firstName} ${order.customer.lastName}`.trim();
   const addressLine = `${order.customer.address}, ${order.customer.city} ${order.customer.zip}`;
   const phoneLine = order.customer.phone ? ` • Tel: \`${order.customer.phone}\`` : "";
+  const discordLine = order.customer.discordUsername ? `\n**Discord účet:** <@${order.customer.discordId || ""}> (\`@${order.customer.discordUsername}\`)` : "";
 
   // Discord Embed structure
   const payload = {
@@ -98,7 +99,7 @@ export async function sendDiscordOrderNotification(
         description:
           `**Kód objednávky:** \`${order.id}\`\n` +
           `**Zákazník:** **${customerName}** (<${order.customer.email}>)${phoneLine}\n` +
-          `**Doručení:** ${order.customer.city} (${order.customer.zip})`,
+          `**Doručení:** ${order.customer.city} (${order.customer.zip})${discordLine}`,
         fields: [
           {
             name: "📦 Položky",

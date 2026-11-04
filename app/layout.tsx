@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { CartProvider } from "@/lib/cart-context";
+import { DiscordAuthProvider } from "@/lib/discord-auth-context";
 import { PreorderModal } from "@/components/shop/preorder-modal";
 import { AdminToolbar } from "@/components/shop/admin-toolbar";
 import "./globals.css";
@@ -31,11 +32,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <CartProvider>
-            <AdminToolbar />
-            {children}
-            <PreorderModal />
-          </CartProvider>
+          <DiscordAuthProvider>
+            <CartProvider>
+              <AdminToolbar />
+              {children}
+              <PreorderModal />
+            </CartProvider>
+          </DiscordAuthProvider>
         </ThemeProvider>
       </body>
     </html>

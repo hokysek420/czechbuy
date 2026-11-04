@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
 import {
   getCountdownConfig,
   CountdownConfig,
@@ -39,6 +40,7 @@ export default function ComingSoonCountdownPage() {
     isComplete: false,
   });
   const [mounted, setMounted] = useState(false);
+  const { user: discordUser, isLoggedIn: isDiscordLoggedIn } = useDiscordAuth();
 
   // Newsletter state
   const [email, setEmail] = useState("");
@@ -128,6 +130,42 @@ export default function ComingSoonCountdownPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {mounted && isDiscordLoggedIn && discordUser ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/prihlaseni"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-xs font-semibold text-[#5865F2] dark:text-[#7983F5] transition"
+                >
+                  <img
+                    src={discordUser.avatarUrl}
+                    alt={discordUser.username}
+                    className="w-4 h-4 rounded-full"
+                  />
+                  <span>@{discordUser.username}</span>
+                  {discordUser.isCzechBuyFam && (
+                    <span className="text-[10px] bg-[#5865F2] text-white px-1.5 py-0.2 rounded-full font-bold">
+                      VIP
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  href="/parfemy"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition"
+                >
+                  <span>Vstoupit</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+            ) : mounted ? (
+              <Link
+                href="/prihlaseni"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition active:scale-95"
+              >
+                <DiscordIcon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Discord Login</span>
+                <span className="sm:hidden">Login</span>
+              </Link>
+            ) : null}
             <ThemeToggle />
           </div>
         </div>
@@ -253,6 +291,51 @@ export default function ComingSoonCountdownPage() {
                 )}
               </form>
             )}
+
+            
+            {/* VIP Discord Access Card */}
+            <div className="pt-2">
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#5865F2]/10 via-[#5865F2]/5 to-transparent border border-[#5865F2]/25 text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#5865F2] text-white flex items-center justify-center shrink-0 shadow-md">
+                    <DiscordIcon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-950 dark:text-white">
+                        VIP Přednostní přístup pro CzechBuy Fam
+                      </h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#5865F2] text-white font-bold">
+                        Early Access
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
+                      {mounted && isDiscordLoggedIn && discordUser
+                        ? `Jsi přihlášen jako @${discordUser.username}. Máš aktivní přednostní přístup.`
+                        : "Přihlas se svým Discord účtem a odemkni si nabídku ještě před oficiálním zahájením."}
+                    </p>
+                  </div>
+                </div>
+
+                {mounted && isDiscordLoggedIn ? (
+                  <Link
+                    href="/parfemy"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs shadow-md hover:opacity-90 transition shrink-0"
+                  >
+                    <span>Vstoupit do obchodu</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                ) : (
+                  <Link
+                    href="/prihlaseni"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs shadow-md hover:shadow-lg transition shrink-0"
+                  >
+                    <DiscordIcon className="h-3.5 w-3.5" />
+                    <span>Přihlásit přes Discord</span>
+                  </Link>
+                )}
+              </div>
+            </div>
 
             {/* Discord & Instagram Community CTA under newsletter */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">

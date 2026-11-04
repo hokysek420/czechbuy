@@ -3,16 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingBag, Menu, X, Sparkles, ShieldCheck, ExternalLink } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, Sparkles, ShieldCheck, ExternalLink, User } from "lucide-react";
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { useCart } from "@/lib/cart-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useCategoryStatus } from "@/lib/use-categories";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
 
 export function Header() {
   const router = useRouter();
   const { itemsCount, setIsOpen } = useCart();
   const { status: categoryStatus } = useCategoryStatus();
+  const { user, isLoggedIn } = useDiscordAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -144,17 +146,38 @@ export function Header() {
           </form>
 
           {/* Action icons */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Discord direct link icon */}
-            <a
-              href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 text-neutral-600 dark:text-neutral-300 hover:text-[#5865F2] dark:hover:text-[#5865F2] rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors focus:outline-none"
-              title="Připojit se k CzechBuy Fam na Discordu"
-            >
-              <DiscordIcon className="h-4 w-4" />
-            </a>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Discord Login / User Profile Button */}
+            {isLoggedIn && user ? (
+              <Link
+                href="/prihlaseni"
+                className="inline-flex items-center gap-2 py-1 px-2.5 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-[#5865F2] dark:hover:border-[#5865F2] transition text-xs text-neutral-800 dark:text-neutral-200 shadow-xs"
+                title={`Přihlášen jako ${user.global_name || user.username}`}
+              >
+                <img
+                  src={user.avatarUrl}
+                  alt={user.username}
+                  className="w-6 h-6 rounded-full object-cover border border-[#5865F2]"
+                />
+                <span className="hidden sm:inline font-semibold max-w-[85px] truncate text-[11px]">
+                  {user.global_name || user.username}
+                </span>
+                {user.isCzechBuyFam && (
+                  <span className="hidden md:inline text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1 rounded">
+                    FAM
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <Link
+                href="/prihlaseni"
+                className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2] text-[#5865F2] hover:text-white transition-all text-xs font-bold uppercase tracking-wider group border border-[#5865F2]/20 shadow-xs"
+                title="Přihlásit se přes Discord"
+              >
+                <DiscordIcon className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline text-[11px]">Přihlásit se</span>
+              </Link>
+            )}
 
             <ThemeToggle />
 
@@ -193,6 +216,48 @@ export function Header() {
       {/* Mobile Menu dropdown */}
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 pt-3 pb-6 space-y-4">
+          {/* Mobile User Profile or Login CTA */}
+          <div className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+            {isLoggedIn && user ? (
+              <Link
+                href="/prihlaseni"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+              >
+                <img
+                  src={user.avatarUrl}
+                  alt={user.username}
+                  className="w-10 h-10 rounded-xl object-cover border border-[#5865F2]"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                      {user.global_name || user.username}
+                    </p>
+                    {user.isCzechBuyFam && (
+                      <span className="text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1 rounded">
+                        FAM
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-neutral-400 font-mono">
+                    @{user.username}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-[#5865F2]">Můj profil</span>
+              </Link>
+            ) : (
+              <Link
+                href="/prihlaseni"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center gap-2.5 w-full py-3 px-4 rounded-xl bg-[#5865F2] text-white font-bold text-xs uppercase tracking-wider shadow-md"
+              >
+                <DiscordIcon className="h-4 w-4" />
+                <span>Přihlásit se přes Discord</span>
+              </Link>
+            )}
+          </div>
+
           <div className="flex flex-col space-y-3">
             <Link
               href="/parfemy"
