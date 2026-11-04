@@ -32,7 +32,7 @@ interface TimeRemaining {
 export default function ComingSoonCountdownPage() {
   const [config, setConfig] = useState<CountdownConfig>(DEFAULT_COUNTDOWN_CONFIG);
   const [timeLeft, setTimeLeft] = useState<TimeRemaining>({
-    days: 18,
+    days: 17,
     hours: 0,
     minutes: 0,
     seconds: 0,

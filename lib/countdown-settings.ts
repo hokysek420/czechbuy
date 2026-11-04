@@ -6,13 +6,13 @@ export interface CountdownConfig {
 }
 
 export const DEFAULT_COUNTDOWN_CONFIG: CountdownConfig = {
-  targetDate: "2026-11-21T20:00",
+  targetDate: "2026-11-20T20:00",
   headline: "Připravujeme pro vás nový zážitek z nakupování",
   subtext: "CzechBuy brzy spustí exkluzivní nabídku prémiových vůní a zakázkového importu. Otevření proběhne za:",
   badgeText: "Připravujeme otevření e-shopu",
 };
 
-const COUNTDOWN_STORAGE_KEY = "czechbuy_countdown_config_v1";
+const COUNTDOWN_STORAGE_KEY = "czechbuy_countdown_config_v2";
 
 export function getCountdownConfig(): CountdownConfig {
   if (typeof window !== "undefined") {
