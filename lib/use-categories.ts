@@ -2,29 +2,29 @@
 
 import { useState, useEffect } from "react";
 import {
-  CategoryStatusConfig,
-  DEFAULT_CATEGORY_STATUS,
+  CategoryComingSoonConfig,
+  DEFAULT_COMING_SOON_CONFIG,
   CATEGORY_STORAGE_KEY,
   getCategoryStatus,
   saveCategoryStatus,
 } from "./category-settings";
 
 export function useCategoryStatus() {
-  const [status, setStatus] = useState<CategoryStatusConfig>(DEFAULT_CATEGORY_STATUS);
+  const [status, setStatus] = useState<CategoryComingSoonConfig>(DEFAULT_COMING_SOON_CONFIG);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. Initial local load
+    // 1. Initial local load from localStorage / Cookie
     const local = getCategoryStatus();
     setStatus(local);
     setIsLoaded(true);
 
-    // 2. Fetch from server API
+    // 2. Fetch from server API to stay in sync
     fetch("/api/admin/categories")
       .then((res) => (res.ok ? res.json() : null))
       .then((serverData) => {
         if (serverData && typeof serverData === "object") {
-          setStatus((prev) => ({ ...prev, ...serverData }));
+          setStatus(serverData);
           if (typeof window !== "undefined") {
             try {
               localStorage.setItem(CATEGORY_STORAGE_KEY, JSON.stringify(serverData));
@@ -55,12 +55,12 @@ export function useCategoryStatus() {
     };
   }, []);
 
-  const updateStatus = (newStatus: CategoryStatusConfig) => {
+  const updateStatus = (newStatus: CategoryComingSoonConfig) => {
     setStatus(newStatus);
     saveCategoryStatus(newStatus);
   };
 
-  const toggleCategory = (category: keyof CategoryStatusConfig) => {
+  const toggleCategory = (category: keyof CategoryComingSoonConfig) => {
     const updated = {
       ...status,
       [category]: !status[category],
@@ -68,10 +68,15 @@ export function useCategoryStatus() {
     updateStatus(updated);
   };
 
+  const isComingSoon = (category: keyof CategoryComingSoonConfig): boolean => {
+    return Boolean(status[category]);
+  };
+
   return {
     status,
     updateStatus,
     toggleCategory,
+    isComingSoon,
     isLoaded,
   };
 }

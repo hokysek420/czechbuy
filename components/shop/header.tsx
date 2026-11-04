@@ -83,17 +83,22 @@ export function Header() {
           {/* Primary Nav Links */}
           <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
             <Link
-              href="/katalog"
-              className="text-neutral-900 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors uppercase tracking-wider text-xs font-semibold py-1 border-b-2 border-neutral-950 dark:border-white"
+              href="/parfemy"
+              className="text-neutral-700 dark:text-neutral-200 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-semibold py-1 flex items-center gap-1.5 transition-colors"
             >
               Parfémy
+              {categoryStatus.parfemy && (
+                <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-purple-200 dark:border-purple-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/obleceni"
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Oblečení
-              {!categoryStatus.obleceni && (
+              {categoryStatus.obleceni && (
                 <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-rose-200 dark:border-rose-800/60">
                   Coming Soon
                 </span>
@@ -104,7 +109,7 @@ export function Header() {
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Boty
-              {!categoryStatus.boty && (
+              {categoryStatus.boty && (
                 <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-cyan-200 dark:border-cyan-800/60">
                   Coming Soon
                 </span>
@@ -115,7 +120,7 @@ export function Header() {
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Digital
-              {!categoryStatus.digital && (
+              {categoryStatus.digital && (
                 <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-purple-200 dark:border-purple-800/60">
                   Coming Soon
                 </span>
@@ -132,7 +137,7 @@ export function Header() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Hledat značku, parfém nebo tóny..."
+              placeholder="Hledat značku, parfém nebo produkt..."
               className="w-full bg-neutral-100 dark:bg-neutral-900 border border-transparent focus:border-neutral-300 dark:focus:border-neutral-700 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 text-xs rounded-full py-2 pl-9 pr-4 focus:outline-none transition-colors"
             />
             <Search className="absolute left-3 h-3.5 w-3.5 text-neutral-400 pointer-events-none" />
@@ -177,7 +182,7 @@ export function Header() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Hledat značku nebo parfém..."
+              placeholder="Hledat značku nebo produkt..."
               className="w-full bg-neutral-100 dark:bg-neutral-900 border border-transparent text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 text-xs rounded-full py-2 pl-9 pr-4 focus:outline-none"
             />
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-neutral-400" />
@@ -190,11 +195,16 @@ export function Header() {
         <div className="lg:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 px-4 pt-3 pb-6 space-y-4">
           <div className="flex flex-col space-y-3">
             <Link
-              href="/katalog"
+              href="/parfemy"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-semibold uppercase tracking-wider text-neutral-900 dark:text-white py-1"
+              className="flex items-center justify-between text-neutral-900 dark:text-white text-sm font-semibold uppercase tracking-wider py-1"
             >
-              Parfémy (Aktivní katalog)
+              <span>Parfémy</span>
+              {categoryStatus.parfemy && (
+                <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/obleceni"
@@ -202,7 +212,7 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Oblečení</span>
-              {!categoryStatus.obleceni && (
+              {categoryStatus.obleceni && (
                 <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
                   Coming Soon
                 </span>
@@ -214,7 +224,7 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Boty</span>
-              {!categoryStatus.boty && (
+              {categoryStatus.boty && (
                 <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800/60">
                   Coming Soon
                 </span>
@@ -226,7 +236,7 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Digital</span>
-              {!categoryStatus.digital && (
+              {categoryStatus.digital && (
                 <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/60">
                   Coming Soon
                 </span>

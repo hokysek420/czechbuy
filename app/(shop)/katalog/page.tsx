@@ -4,11 +4,14 @@ import React, { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, Sparkles, PackageSearch } from "lucide-react";
 import { useProducts } from "@/lib/use-products";
+import { useCategoryStatus } from "@/lib/use-categories";
+import { ParfemyComingSoon } from "@/components/shop/parfemy-coming-soon";
 import { ProductCard } from "@/components/shop/product-card";
 import { CatalogFilters, FilterState } from "@/components/shop/catalog-filters";
 import { FragranceGender, FragranceConcentration } from "@/types";
 
 function CatalogContent() {
+  const { status } = useCategoryStatus();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const initialGender = (searchParams.get("gender") as FragranceGender) || "all";
@@ -112,6 +115,11 @@ function CatalogContent() {
       }
     });
   }, [filters, products]);
+
+  // If Coming Soon is active for parfemy, display the teaser
+  if (status.parfemy) {
+    return <ParfemyComingSoon />;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -303,15 +303,29 @@ export default function AdminDashboardPage() {
       .catch(() => {});
   }, []);
 
+  const [categorySavedMsg, setCategorySavedMsg] = useState("Stav byl aktualizován.");
+
   const handleToggleCategory = (cat: keyof CategoryStatusConfig) => {
+    const nextComingSoon = !categoryStatus[cat];
     const updated: CategoryStatusConfig = {
       ...categoryStatus,
-      [cat]: !categoryStatus[cat],
+      [cat]: nextComingSoon,
     };
     setCategoryStatus(updated);
     saveCategoryStatus(updated);
     setCategorySavedSuccess(true);
-    setTimeout(() => setCategorySavedSuccess(false), 3000);
+    const catNames: Record<string, string> = {
+      parfemy: "Parfémy",
+      obleceni: "Oblečení",
+      boty: "Boty & Sneakers",
+      digital: "CzechBuy Digital",
+    };
+    setCategorySavedMsg(
+      nextComingSoon
+        ? `${catNames[cat]} byla přepnuta na COMING SOON (aktivní teaser).`
+        : `${catNames[cat]} byla spuštěna jako NORMÁLNÍ KATALOG.`
+    );
+    setTimeout(() => setCategorySavedSuccess(false), 4500);
   };
 
   const handleTestDiscordWebhook = async () => {
@@ -1282,22 +1296,22 @@ export default function AdminDashboardPage() {
                 <div>
                   <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-purple-500" />
-                    <span>Spuštění kategorií & Coming Soon přepínače</span>
+                    <span>Správa Coming Soon a přepínače katalogů</span>
                   </h3>
                   <p className="text-xs text-neutral-500 mt-1">
-                    Jedním kliknutím můžete odebrat kategorii z „Coming Soon“ a spustit její prodej, nebo ji dočasně vrátit do přípravného režimu.
+                    Přepínejte mezi <strong>Coming Soon upoutávkou</strong> (se sběrem kontaktů na Discord a teaserem) a <strong>normálním e-shop katalogem</strong> s filtry a nákupem.
                   </p>
                 </div>
                 {categorySavedSuccess && (
-                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-semibold animate-in fade-in">
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold animate-in fade-in py-1 px-3 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
                     <Check className="h-4 w-4" />
-                    <span>Stav kategorií byl aktualizován na celém webu.</span>
+                    <span>{categorySavedMsg}</span>
                   </span>
                 )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-                {/* Parfémy */}
+                {/* 1. Parfémy */}
                 <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1309,36 +1323,52 @@ export default function AdminDashboardPage() {
                         <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countParfemy}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
                       categoryStatus.parfemy
-                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
-                        : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800"
+                        ? "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                        : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
                     }`}>
-                      {categoryStatus.parfemy ? "Aktivní katalog" : "Coming Soon"}
+                      {categoryStatus.parfemy ? (
+                        <>
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                          <span>Coming Soon AKTIVNÍ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>NORMÁLNÍ KATALOG</span>
+                        </>
+                      )}
                     </span>
                   </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     {categoryStatus.parfemy
-                      ? "Kategorie je aktivní: zákazníci mohou prohlížet flakony a vkládat je do košíku."
-                      : "Kategorie je označena jako Coming Soon: na webu je viditelná se štítkem Již brzy."}
+                      ? "⚠️ Coming Soon je zapnuté: zákazníci vidí grafický teaser se sběrem zájemců na Discord (dle vašeho náhledu)."
+                      : "✅ Normální katalog je v provozu: zákazníci vidí plnohodnotný katalog flakonů, filtry a mohou nakupovat."}
                   </p>
+
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                    <Link href="/katalog" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
-                      <span>Zobrazit na webu</span>
+                    <Link
+                      href="/parfemy"
+                      target="_blank"
+                      className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1 font-medium transition"
+                    >
+                      <span>Otevřít na webu (/parfemy)</span>
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <Button
                       size="sm"
-                      variant={categoryStatus.parfemy ? "outline" : "primary"}
+                      variant={categoryStatus.parfemy ? "primary" : "outline"}
                       onClick={() => handleToggleCategory("parfemy")}
                       className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
-                      {categoryStatus.parfemy ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                      {categoryStatus.parfemy ? "Spustit normální katalog" : "Aktivovat Coming Soon"}
                     </Button>
                   </div>
                 </div>
 
-                {/* Oblečení */}
+                {/* 2. Oblečení */}
                 <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1350,36 +1380,52 @@ export default function AdminDashboardPage() {
                         <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countObleceni}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
                       categoryStatus.obleceni
-                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
-                        : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800"
+                        ? "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                        : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
                     }`}>
-                      {categoryStatus.obleceni ? "Aktivní katalog" : "Coming Soon"}
+                      {categoryStatus.obleceni ? (
+                        <>
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                          <span>Coming Soon AKTIVNÍ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>NORMÁLNÍ KATALOG</span>
+                        </>
+                      )}
                     </span>
                   </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     {categoryStatus.obleceni
-                      ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat streetwear a módu."
-                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
+                      ? "⚠️ Coming Soon je zapnuté: zákazníci vidí grafický teaser se sběrem zájemců na Discord (dle vašeho náhledu)."
+                      : "✅ Normální katalog je v provozu: zákazníci vidí plnohodnotný katalog streetwearu s filtry velikostí a nákupem."}
                   </p>
+
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                    <Link href="/obleceni" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
-                      <span>Zobrazit na webu</span>
+                    <Link
+                      href="/obleceni"
+                      target="_blank"
+                      className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1 font-medium transition"
+                    >
+                      <span>Otevřít na webu (/obleceni)</span>
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <Button
                       size="sm"
-                      variant={categoryStatus.obleceni ? "outline" : "primary"}
+                      variant={categoryStatus.obleceni ? "primary" : "outline"}
                       onClick={() => handleToggleCategory("obleceni")}
                       className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
-                      {categoryStatus.obleceni ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                      {categoryStatus.obleceni ? "Spustit normální katalog" : "Aktivovat Coming Soon"}
                     </Button>
                   </div>
                 </div>
 
-                {/* Boty */}
+                {/* 3. Boty */}
                 <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1391,36 +1437,52 @@ export default function AdminDashboardPage() {
                         <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countBoty}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
                       categoryStatus.boty
-                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
-                        : "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800"
+                        ? "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                        : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
                     }`}>
-                      {categoryStatus.boty ? "Aktivní katalog" : "Coming Soon"}
+                      {categoryStatus.boty ? (
+                        <>
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                          <span>Coming Soon AKTIVNÍ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>NORMÁLNÍ KATALOG</span>
+                        </>
+                      )}
                     </span>
                   </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     {categoryStatus.boty
-                      ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat tenisky a sneakers."
-                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
+                      ? "⚠️ Coming Soon je zapnuté: zákazníci vidí grafický teaser se sběrem zájemců na Discord (dle vašeho náhledu)."
+                      : "✅ Normální katalog je v provozu: zákazníci vidí plnohodnotný katalog tenisek s filtry velikostí EU a nákupem."}
                   </p>
+
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                    <Link href="/boty" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
-                      <span>Zobrazit na webu</span>
+                    <Link
+                      href="/boty"
+                      target="_blank"
+                      className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1 font-medium transition"
+                    >
+                      <span>Otevřít na webu (/boty)</span>
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <Button
                       size="sm"
-                      variant={categoryStatus.boty ? "outline" : "primary"}
+                      variant={categoryStatus.boty ? "primary" : "outline"}
                       onClick={() => handleToggleCategory("boty")}
                       className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
-                      {categoryStatus.boty ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                      {categoryStatus.boty ? "Spustit normální katalog" : "Aktivovat Coming Soon"}
                     </Button>
                   </div>
                 </div>
 
-                {/* Digital */}
+                {/* 4. Digital */}
                 <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -1432,31 +1494,47 @@ export default function AdminDashboardPage() {
                         <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countDigital}</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold border ${
                       categoryStatus.digital
-                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
-                        : "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800"
+                        ? "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-800"
+                        : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800"
                     }`}>
-                      {categoryStatus.digital ? "Aktivní katalog" : "Coming Soon"}
+                      {categoryStatus.digital ? (
+                        <>
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                          <span>Coming Soon AKTIVNÍ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>NORMÁLNÍ KATALOG</span>
+                        </>
+                      )}
                     </span>
                   </div>
+
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     {categoryStatus.digital
-                      ? "Kategorie je aktivní: zákazníci mohou okamžitě nakupovat herní klíče a licence."
-                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k dropům."}
+                      ? "⚠️ Coming Soon je zapnuté: zákazníci vidí grafický teaser se sběrem zájemců na Discord (dle vašeho náhledu)."
+                      : "✅ Normální katalog je v provozu: zákazníci vidí plnohodnotný katalog herních klíčů a licencí s okamžitým nákupem."}
                   </p>
+
                   <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-t border-neutral-200/60 dark:border-neutral-800/60">
-                    <Link href="/digital" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
-                      <span>Zobrazit na webu</span>
+                    <Link
+                      href="/digital"
+                      target="_blank"
+                      className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1 font-medium transition"
+                    >
+                      <span>Otevřít na webu (/digital)</span>
                       <ExternalLink className="h-3 w-3" />
                     </Link>
                     <Button
                       size="sm"
-                      variant={categoryStatus.digital ? "outline" : "primary"}
+                      variant={categoryStatus.digital ? "primary" : "outline"}
                       onClick={() => handleToggleCategory("digital")}
                       className="w-full sm:w-auto text-xs uppercase tracking-wider font-semibold"
                     >
-                      {categoryStatus.digital ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                      {categoryStatus.digital ? "Spustit normální katalog" : "Aktivovat Coming Soon"}
                     </Button>
                   </div>
                 </div>
