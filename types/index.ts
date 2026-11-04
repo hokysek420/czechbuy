@@ -1,4 +1,4 @@
-export type ProductCategory = 'parfemy' | 'obleceni' | 'boty';
+export type ProductCategory = 'parfemy' | 'obleceni' | 'boty' | 'digital';
 
 export type FragranceConcentration = 'EdP' | 'EdT' | 'Parfum' | 'Extrait';
 
@@ -24,28 +24,48 @@ export interface Product {
   category: ProductCategory;
   price: number;
   originalPrice?: number;
-  volume: string;
-  volumeVariants: VolumeVariant[];
+  volume?: string;
+  volumeVariants?: VolumeVariant[];
   stock: number;
-  concentration: FragranceConcentration;
-  gender: FragranceGender;
-  scentNotes: ScentNotes;
+  concentration?: FragranceConcentration;
+  gender?: FragranceGender;
+  scentNotes?: ScentNotes;
   description: string;
-  image: string;
+  image?: string;
   featured: boolean;
   isNew?: boolean;
+
+  // Specific attributes for Oblečení
+  clothingSizes?: string[]; // e.g. ["S", "M", "L", "XL"]
+  material?: string;
+  fit?: string;
+  color?: string;
+
+  // Specific attributes for Boty
+  shoeSizes?: string[]; // e.g. ["EU 40", "EU 41", "EU 42", "EU 43", "EU 44"]
+  colorway?: string;
+  sku?: string;
+  condition?: string;
+
+  // Specific attributes for Digital
+  platform?: string; // "Steam", "PlayStation", "Xbox", "PC", "Spotify"
+  licenseType?: string; // "Trvalá licence", "Předplatné", "Kód"
+  region?: string; // "Global / Region Free", "Evropa / CZ"
+  deliveryTime?: string;
 }
 
 export interface CartItem {
-  id: string; // composite key: `${productId}-${volume}`
+  id: string; // composite key: `${productId}-${variantOrVolume}`
   productId: string;
   name: string;
   brand: string;
-  volume: string;
+  volume?: string;
+  size?: string;
+  category?: ProductCategory;
   price: number;
-  image: string;
+  image?: string;
   quantity: number;
-  concentration: FragranceConcentration;
+  concentration?: FragranceConcentration;
 }
 
 export type OrderStatus = 'nova' | 'zpracovava_se' | 'odeslano' | 'doruceno' | 'stornovano';

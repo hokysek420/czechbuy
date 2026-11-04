@@ -26,9 +26,14 @@ import {
   Radio,
   CheckCircle2,
   AlertCircle,
+  Shirt,
+  Footprints,
+  Gamepad2,
+  Tag,
+  Layers,
 } from "lucide-react";
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
-import { Product, Order, OrderStatus, FragranceConcentration, FragranceGender } from "@/types";
+import { Product, Order, OrderStatus, ProductCategory, FragranceConcentration, FragranceGender } from "@/types";
 import {
   getInitialProducts,
   saveProducts,
@@ -41,6 +46,12 @@ import {
   CountdownConfig,
   DEFAULT_COUNTDOWN_CONFIG,
 } from "@/lib/countdown-settings";
+import {
+  getCategoryStatus,
+  saveCategoryStatus,
+  CategoryStatusConfig,
+  DEFAULT_CATEGORY_STATUS,
+} from "@/lib/category-settings";
 import { formatPrice, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,10 +60,15 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"products" | "countdown" | "orders" | "discord">("products");
+  const [activeTab, setActiveTab] = useState<"products" | "categories" | "countdown" | "orders" | "discord">("products");
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<"all" | ProductCategory>("all");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Category launch & coming soon toggles state
+  const [categoryStatus, setCategoryStatus] = useState<CategoryStatusConfig>(DEFAULT_CATEGORY_STATUS);
+  const [categorySavedSuccess, setCategorySavedSuccess] = useState(false);
 
   // Discord webhook status & test state
   const [discordInfo, setDiscordInfo] = useState<{
@@ -89,54 +105,150 @@ export default function AdminDashboardPage() {
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
   const [editingProductData, setEditingProductData] = useState<{
     id: string;
+    category: ProductCategory;
     name: string;
     brand: string;
     price: number;
-    volume: string;
+    originalPrice?: number;
     stock: number;
+    description: string;
+    image: string;
+    featured: boolean;
+    isNew: boolean;
+
+    // Parfémy
+    volume: string;
     concentration: FragranceConcentration;
     gender: FragranceGender;
     headNotes: string;
     heartNotes: string;
     baseNotes: string;
-    description: string;
-    image: string;
-    featured: boolean;
-    isNew: boolean;
+
+    // Oblečení
+    clothingSizes: string[];
+    material: string;
+    fit: string;
+    color: string;
+
+    // Boty
+    shoeSizes: string[];
+    colorway: string;
+    sku: string;
+    condition: string;
+
+    // Digital
+    platform: string;
+    licenseType: string;
+    region: string;
+    deliveryTime: string;
   }>({
     id: "",
+    category: "parfemy",
     name: "",
     brand: "",
     price: 2490,
-    volume: "100 ml",
+    originalPrice: 0,
     stock: 20,
+    description: "",
+    image: "",
+    featured: false,
+    isNew: false,
+
+    volume: "100 ml",
     concentration: "EdP",
     gender: "unisex",
     headNotes: "",
     heartNotes: "",
     baseNotes: "",
-    description: "",
-    image: "",
-    featured: false,
-    isNew: false,
+
+    clothingSizes: ["M", "L", "XL"],
+    material: "100% bavlna",
+    fit: "Regular fit",
+    color: "Černá",
+
+    shoeSizes: ["EU 41", "EU 42", "EU 43", "EU 44"],
+    colorway: "Black / White",
+    sku: "",
+    condition: "Deadstock (Nové v krabici)",
+
+    platform: "Steam",
+    licenseType: "Trvalá licence",
+    region: "Global / Region Free",
+    deliveryTime: "Okamžitě e-mailem (do 30s)",
   });
 
   // New product modal
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
-  const [newProductData, setNewProductData] = useState({
+  const [newProductData, setNewProductData] = useState<{
+    category: ProductCategory;
+    name: string;
+    brand: string;
+    price: number;
+    originalPrice?: number;
+    stock: number;
+    description: string;
+    image: string;
+    featured: boolean;
+    isNew: boolean;
+
+    // Parfémy
+    volume: string;
+    concentration: FragranceConcentration;
+    gender: FragranceGender;
+    headNotes: string;
+    heartNotes: string;
+    baseNotes: string;
+
+    // Oblečení
+    clothingSizes: string[];
+    material: string;
+    fit: string;
+    color: string;
+
+    // Boty
+    shoeSizes: string[];
+    colorway: string;
+    sku: string;
+    condition: string;
+
+    // Digital
+    platform: string;
+    licenseType: string;
+    region: string;
+    deliveryTime: string;
+  }>({
+    category: "parfemy",
     name: "",
     brand: "",
     price: 2490,
-    volume: "100 ml",
+    originalPrice: 0,
     stock: 20,
-    concentration: "EdP" as FragranceConcentration,
-    gender: "unisex" as FragranceGender,
+    description: "",
+    image: "",
+    featured: false,
+    isNew: true,
+
+    volume: "100 ml",
+    concentration: "EdP",
+    gender: "unisex",
     headNotes: "Bergamot, Citrusy",
     heartNotes: "Levandule, Koření",
     baseNotes: "Cedr, Ambroxan",
-    description: "",
-    image:
-      "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80",
+
+    clothingSizes: ["S", "M", "L", "XL"],
+    material: "100% organická bavlna",
+    fit: "Oversized fit",
+    color: "Černá (Black)",
+
+    shoeSizes: ["EU 41", "EU 42", "EU 43", "EU 44"],
+    colorway: "Black / White",
+    sku: "",
+    condition: "Deadstock (Nové v krabici)",
+
+    platform: "Steam",
+    licenseType: "Trvalá digitální licence",
+    region: "Global / Region Free",
+    deliveryTime: "Okamžitě e-mailem (do 30s)",
   });
 
   useEffect(() => {
@@ -153,6 +265,19 @@ export default function AdminDashboardPage() {
     });
     setEditingProducts(initialEdits);
     setIsLoaded(true);
+
+    // Load category statuses
+    const loadedCategories = getCategoryStatus();
+    setCategoryStatus(loadedCategories);
+
+    fetch("/api/admin/categories")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((catData) => {
+        if (catData && typeof catData === "object") {
+          setCategoryStatus(catData);
+        }
+      })
+      .catch(() => {});
 
     // Fetch products from server API to ensure cross-session synchronization
     fetch("/api/products")
@@ -177,6 +302,17 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {});
   }, []);
+
+  const handleToggleCategory = (cat: keyof CategoryStatusConfig) => {
+    const updated: CategoryStatusConfig = {
+      ...categoryStatus,
+      [cat]: !categoryStatus[cat],
+    };
+    setCategoryStatus(updated);
+    saveCategoryStatus(updated);
+    setCategorySavedSuccess(true);
+    setTimeout(() => setCategorySavedSuccess(false), 3000);
+  };
 
   const handleTestDiscordWebhook = async () => {
     setIsTestingDiscord(true);
@@ -212,20 +348,34 @@ export default function AdminDashboardPage() {
   const handleOpenEditProduct = (p: Product) => {
     setEditingProductData({
       id: p.id,
+      category: p.category || "parfemy",
       name: p.name,
       brand: p.brand,
       price: p.price,
-      volume: p.volume,
+      originalPrice: p.originalPrice || 0,
+      volume: p.volume || "100 ml",
       stock: p.stock,
-      concentration: p.concentration,
-      gender: p.gender,
-      headNotes: p.scentNotes.head.join(", "),
-      heartNotes: p.scentNotes.heart.join(", "),
-      baseNotes: p.scentNotes.base.join(", "),
-      description: p.description,
-      image: p.image,
+      concentration: p.concentration || "EdP",
+      gender: p.gender || "unisex",
+      headNotes: p.scentNotes?.head ? p.scentNotes.head.join(", ") : "",
+      heartNotes: p.scentNotes?.heart ? p.scentNotes.heart.join(", ") : "",
+      baseNotes: p.scentNotes?.base ? p.scentNotes.base.join(", ") : "",
+      description: p.description || "",
+      image: p.image || "",
       featured: Boolean(p.featured),
       isNew: Boolean(p.isNew),
+      clothingSizes: p.clothingSizes || ["S", "M", "L", "XL"],
+      material: p.material || "",
+      fit: p.fit || "Regular fit",
+      color: p.color || "",
+      shoeSizes: p.shoeSizes || ["EU 41", "EU 42", "EU 43"],
+      colorway: p.colorway || "",
+      sku: p.sku || "",
+      condition: p.condition || "Deadstock (Nové v krabici)",
+      platform: p.platform || "Steam",
+      licenseType: p.licenseType || "Trvalá licence",
+      region: p.region || "Global / Region Free",
+      deliveryTime: p.deliveryTime || "Okamžitě e-mailem (do 30s)",
     });
     setIsEditProductOpen(true);
   };
@@ -236,32 +386,62 @@ export default function AdminDashboardPage() {
       if (p.id === editingProductData.id) {
         return {
           ...p,
+          category: editingProductData.category,
           name: editingProductData.name,
           brand: editingProductData.brand,
           price: Number(editingProductData.price),
-          volume: editingProductData.volume,
+          originalPrice: editingProductData.originalPrice ? Number(editingProductData.originalPrice) : undefined,
           stock: Number(editingProductData.stock),
-          concentration: editingProductData.concentration,
-          gender: editingProductData.gender,
           description: editingProductData.description,
           image: editingProductData.image,
           featured: editingProductData.featured,
           isNew: editingProductData.isNew,
-          scentNotes: {
-            head: editingProductData.headNotes.split(",").map((s) => s.trim()),
-            heart: editingProductData.heartNotes.split(",").map((s) => s.trim()),
-            base: editingProductData.baseNotes.split(",").map((s) => s.trim()),
-          },
-          volumeVariants: p.volumeVariants.map((v, idx) =>
-            idx === 0
-              ? {
-                  ...v,
-                  volume: editingProductData.volume,
-                  price: Number(editingProductData.price),
-                  inStock: Number(editingProductData.stock),
-                }
-              : v
-          ),
+
+          // Parfémy
+          ...(editingProductData.category === "parfemy" && {
+            volume: editingProductData.volume,
+            concentration: editingProductData.concentration,
+            gender: editingProductData.gender,
+            scentNotes: {
+              head: editingProductData.headNotes.split(",").map((s) => s.trim()).filter(Boolean),
+              heart: editingProductData.heartNotes.split(",").map((s) => s.trim()).filter(Boolean),
+              base: editingProductData.baseNotes.split(",").map((s) => s.trim()).filter(Boolean),
+            },
+            volumeVariants: (p.volumeVariants || []).map((v, idx) =>
+              idx === 0
+                ? {
+                    ...v,
+                    volume: editingProductData.volume,
+                    price: Number(editingProductData.price),
+                    inStock: Number(editingProductData.stock),
+                  }
+                : v
+            ),
+          }),
+
+          // Oblečení
+          ...(editingProductData.category === "obleceni" && {
+            clothingSizes: editingProductData.clothingSizes,
+            material: editingProductData.material,
+            fit: editingProductData.fit,
+            color: editingProductData.color,
+          }),
+
+          // Boty
+          ...(editingProductData.category === "boty" && {
+            shoeSizes: editingProductData.shoeSizes,
+            colorway: editingProductData.colorway,
+            sku: editingProductData.sku,
+            condition: editingProductData.condition,
+          }),
+
+          // Digital
+          ...(editingProductData.category === "digital" && {
+            platform: editingProductData.platform,
+            licenseType: editingProductData.licenseType,
+            region: editingProductData.region,
+            deliveryTime: editingProductData.deliveryTime,
+          }),
         };
       }
       return p;
@@ -333,7 +513,7 @@ export default function AdminDashboardPage() {
           ...p,
           price: changes.price,
           stock: changes.stock,
-          volumeVariants: p.volumeVariants.map((v, idx) =>
+          volumeVariants: (p.volumeVariants || []).map((v, idx) =>
             idx === 0 ? { ...v, price: changes.price, inStock: changes.stock } : v
           ),
         };
@@ -348,7 +528,7 @@ export default function AdminDashboardPage() {
   };
 
   const handleDeleteProduct = (id: string) => {
-    if (confirm("Opravdu si přejete tento produkt z katalogu smazat?")) {
+    if (confirm("Opravdu si přejete tento produkt z nabídky smazat?")) {
       const updated = products.filter((p) => p.id !== id);
       setProducts(updated);
       saveProducts(updated);
@@ -358,7 +538,7 @@ export default function AdminDashboardPage() {
   const handleCreateProduct = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProductData.name || !newProductData.brand) {
-      alert("Vyplňte prosím název a značku parfému.");
+      alert("Vyplňte prosím název a značku produktu.");
       return;
     }
 
@@ -366,35 +546,71 @@ export default function AdminDashboardPage() {
       .toLowerCase()
       .replace(/\s+/g, "-")}-${Date.now().toString().slice(-4)}`;
 
+    const fallbackImages: Record<ProductCategory, string> = {
+      parfemy: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80",
+      obleceni: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=1000&q=80",
+      boty: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=1000&q=80",
+      digital: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1000&q=80",
+    };
+
     const createdProduct: Product = {
       id: newId,
       slug: newId,
       name: newProductData.name,
       brand: newProductData.brand,
-      category: "parfemy",
+      category: newProductData.category,
       price: Number(newProductData.price),
-      volume: newProductData.volume,
-      volumeVariants: [
-        {
-          volume: newProductData.volume,
-          price: Number(newProductData.price),
-          inStock: Number(newProductData.stock),
-        },
-      ],
+      originalPrice: newProductData.originalPrice ? Number(newProductData.originalPrice) : undefined,
       stock: Number(newProductData.stock),
-      concentration: newProductData.concentration,
-      gender: newProductData.gender,
-      scentNotes: {
-        head: newProductData.headNotes.split(",").map((s) => s.trim()),
-        heart: newProductData.heartNotes.split(",").map((s) => s.trim()),
-        base: newProductData.baseNotes.split(",").map((s) => s.trim()),
-      },
       description:
         newProductData.description ||
-        "Autentický originální parfém z oficiální evropské distribuce.",
-      image: newProductData.image,
-      featured: false,
-      isNew: true,
+        `Originální ${newProductData.brand} ${newProductData.name} z ověřené distribuce.`,
+      image: newProductData.image || fallbackImages[newProductData.category],
+      featured: newProductData.featured,
+      isNew: newProductData.isNew,
+
+      // Parfémy
+      ...(newProductData.category === "parfemy" && {
+        volume: newProductData.volume,
+        concentration: newProductData.concentration,
+        gender: newProductData.gender,
+        volumeVariants: [
+          {
+            volume: newProductData.volume,
+            price: Number(newProductData.price),
+            inStock: Number(newProductData.stock),
+          },
+        ],
+        scentNotes: {
+          head: newProductData.headNotes.split(",").map((s) => s.trim()).filter(Boolean),
+          heart: newProductData.heartNotes.split(",").map((s) => s.trim()).filter(Boolean),
+          base: newProductData.baseNotes.split(",").map((s) => s.trim()).filter(Boolean),
+        },
+      }),
+
+      // Oblečení
+      ...(newProductData.category === "obleceni" && {
+        clothingSizes: newProductData.clothingSizes,
+        material: newProductData.material,
+        fit: newProductData.fit,
+        color: newProductData.color,
+      }),
+
+      // Boty
+      ...(newProductData.category === "boty" && {
+        shoeSizes: newProductData.shoeSizes,
+        colorway: newProductData.colorway,
+        sku: newProductData.sku,
+        condition: newProductData.condition,
+      }),
+
+      // Digital
+      ...(newProductData.category === "digital" && {
+        platform: newProductData.platform,
+        licenseType: newProductData.licenseType,
+        region: newProductData.region,
+        deliveryTime: newProductData.deliveryTime,
+      }),
     };
 
     const updated = [createdProduct, ...products];
@@ -407,21 +623,37 @@ export default function AdminDashboardPage() {
     }));
 
     setIsAddProductOpen(false);
+
     // Reset form
     setNewProductData({
+      category: "parfemy",
       name: "",
       brand: "",
       price: 2490,
-      volume: "100 ml",
+      originalPrice: 0,
       stock: 20,
+      description: "",
+      image: "",
+      featured: false,
+      isNew: true,
+      volume: "100 ml",
       concentration: "EdP",
       gender: "unisex",
       headNotes: "Bergamot, Citrusy",
       heartNotes: "Levandule, Koření",
       baseNotes: "Cedr, Ambroxan",
-      description: "",
-      image:
-        "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80",
+      clothingSizes: ["S", "M", "L", "XL"],
+      material: "100% bavlna",
+      fit: "Regular fit",
+      color: "Černá",
+      shoeSizes: ["EU 41", "EU 42", "EU 43", "EU 44"],
+      colorway: "Black / White",
+      sku: "",
+      condition: "Deadstock (Nové v krabici)",
+      platform: "Steam",
+      licenseType: "Trvalá licence",
+      region: "Global / Region Free",
+      deliveryTime: "Okamžitě e-mailem (do 30s)",
     });
   };
 
@@ -457,11 +689,21 @@ export default function AdminDashboardPage() {
       o.customer.email.toLowerCase().includes(orderSearch.toLowerCase())
   );
 
-  const filteredProducts = products.filter(
-    (p) =>
+  const filteredProducts = products.filter((p) => {
+    if (selectedCategoryFilter !== "all" && p.category !== selectedCategoryFilter) {
+      return false;
+    }
+    return (
       p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-      p.brand.toLowerCase().includes(productSearch.toLowerCase())
-  );
+      p.brand.toLowerCase().includes(productSearch.toLowerCase()) ||
+      (p.description && p.description.toLowerCase().includes(productSearch.toLowerCase()))
+    );
+  });
+
+  const countParfemy = products.filter((p) => p.category === "parfemy").length;
+  const countObleceni = products.filter((p) => p.category === "obleceni").length;
+  const countBoty = products.filter((p) => p.category === "boty").length;
+  const countDigital = products.filter((p) => p.category === "digital").length;
 
   if (!isLoaded) {
     return (
@@ -585,6 +827,18 @@ export default function AdminDashboardPage() {
           >
             <Boxes className="h-4 w-4" />
             <span>Katalog produktů & Sklad ({products.length})</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("categories")}
+            className={`pb-3 text-sm font-semibold transition-colors border-b-2 flex items-center gap-2 ${
+              activeTab === "categories"
+                ? "border-neutral-900 text-neutral-900 dark:border-white dark:text-white"
+                : "border-transparent text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200"
+            }`}
+          >
+            <Sparkles className="h-4 w-4 text-purple-500" />
+            <span>Spuštění kategorií & Coming Soon</span>
           </button>
           <button
             type="button"
@@ -750,7 +1004,7 @@ export default function AdminDashboardPage() {
                   type="text"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  placeholder="Vyhledat parfém nebo značku..."
+                  placeholder="Vyhledat produkt dle názvu, značky či kategorie..."
                   className="w-full text-xs py-2 pl-9 pr-4 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:outline-none"
                 />
                 <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-neutral-400" />
@@ -762,8 +1016,71 @@ export default function AdminDashboardPage() {
                 className="inline-flex items-center gap-1.5 uppercase tracking-wider text-xs font-semibold"
               >
                 <Plus className="h-4 w-4" />
-                <span>Přidat nový parfém</span>
+                <span>Přidat nový produkt</span>
               </Button>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 pb-1">
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("all")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition ${
+                  selectedCategoryFilter === "all"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                Všechny kategorie ({products.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("parfemy")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  selectedCategoryFilter === "parfemy"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                <span>🧴 Parfémy</span>
+                <span className="text-[10px] opacity-80 font-mono">({countParfemy})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("obleceni")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  selectedCategoryFilter === "obleceni"
+                    ? "bg-rose-600 text-white shadow-xs"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                <span>👕 Oblečení</span>
+                <span className="text-[10px] opacity-80 font-mono">({countObleceni})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("boty")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  selectedCategoryFilter === "boty"
+                    ? "bg-cyan-600 text-white shadow-xs"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                <span>👟 Boty</span>
+                <span className="text-[10px] opacity-80 font-mono">({countBoty})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("digital")}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
+                  selectedCategoryFilter === "digital"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                }`}
+              >
+                <span>⚡ Digital</span>
+                <span className="text-[10px] opacity-80 font-mono">({countDigital})</span>
+              </button>
             </div>
 
             {/* Products Table */}
@@ -773,9 +1090,9 @@ export default function AdminDashboardPage() {
                   <thead className="bg-neutral-50 dark:bg-neutral-950/60 uppercase tracking-wider text-[10px] text-neutral-500 font-semibold">
                     <tr>
                       <th className="py-3 px-4 w-14">Foto</th>
+                      <th className="py-3 px-4">Kategorie</th>
                       <th className="py-3 px-4">Název & Značka</th>
-                      <th className="py-3 px-4">Objem</th>
-                      <th className="py-3 px-4">Koncentrace</th>
+                      <th className="py-3 px-4">Specifikace</th>
                       <th className="py-3 px-4 w-32">Cena (Kč)</th>
                       <th className="py-3 px-4 w-28">Sklad (ks)</th>
                       <th className="py-3 px-4 text-right">Akce</th>
@@ -789,132 +1106,350 @@ export default function AdminDashboardPage() {
                             Žádné produkty v katalogu
                           </p>
                           <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
-                            Zatím jste nepřidali žádný parfém. Klikněte výše na „Přidat nový parfém“ pro vložení první položky do nabídky.
+                            Zatím jste nepřidali žádný produkt v této kategorii. Klikněte výše na „Přidat nový produkt“ pro vložení první položky do nabídky.
                           </p>
                         </td>
                       </tr>
                     ) : (
                       filteredProducts.map((product) => {
-                      const editState = editingProducts[product.id] || {
-                        price: product.price,
-                        stock: product.stock,
-                      };
-                      const hasChanges =
-                        editState.price !== product.price ||
-                        editState.stock !== product.stock;
-                      const isJustSaved = savedSuccessId === product.id;
+                        const editState = editingProducts[product.id] || {
+                          price: product.price,
+                          stock: product.stock,
+                        };
+                        const hasChanges =
+                          editState.price !== product.price ||
+                          editState.stock !== product.stock;
+                        const isJustSaved = savedSuccessId === product.id;
 
-                      return (
-                        <tr
-                          key={product.id}
-                          className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
-                        >
-                          <td className="py-3 px-4">
-                            <div className="relative h-12 w-10 rounded overflow-hidden bg-neutral-100 dark:bg-neutral-800">
-                              <Image
-                                src={product.image}
-                                alt={product.name}
-                                fill
-                                className="object-cover"
-                                sizes="40px"
-                              />
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                              {product.brand}
+                        const categoryBadges: Record<ProductCategory, React.ReactNode> = {
+                          parfemy: (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+                              Parfém
                             </span>
-                            <p className="font-semibold text-neutral-900 dark:text-white">
-                              {product.name}
-                            </p>
-                          </td>
-                          <td className="py-3 px-4 text-neutral-600 dark:text-neutral-400 font-medium">
-                            {product.volume}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge variant="secondary">
-                              {product.concentration}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4">
-                            <input
-                              type="number"
-                              min={0}
-                              step={10}
-                              value={editState.price}
-                              onChange={(e) =>
-                                handleProductInputChange(
-                                  product.id,
-                                  "price",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="w-24 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
-                            />
-                          </td>
-                          <td className="py-3 px-4">
-                            <input
-                              type="number"
-                              min={0}
-                              value={editState.stock}
-                              onChange={(e) =>
-                                handleProductInputChange(
-                                  product.id,
-                                  "stock",
-                                  Number(e.target.value)
-                                )
-                              }
-                              className="w-20 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
-                            />
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="inline-flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEditProduct(product)}
-                                className="p-1.5 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                                title="Upravit kompletní parametry parfému (popis, objem, foto...)"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
+                          ),
+                          obleceni: (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800">
+                              Oblečení
+                            </span>
+                          ),
+                          boty: (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800">
+                              Boty
+                            </span>
+                          ),
+                          digital: (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800">
+                              Digital
+                            </span>
+                          ),
+                        };
 
-                              {isJustSaved ? (
-                                <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold px-2 py-1">
-                                  <Check className="h-3.5 w-3.5" />
-                                  <span>Uloženo</span>
-                                </span>
-                              ) : (
+                        return (
+                          <tr
+                            key={product.id}
+                            className="hover:bg-neutral-50 dark:hover:bg-neutral-800/40 transition-colors"
+                          >
+                            <td className="py-3 px-4">
+                              <div className="relative h-12 w-10 rounded overflow-hidden bg-neutral-100 dark:bg-neutral-800">
+                                <Image
+                                  src={product.image || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80"}
+                                  alt={product.name}
+                                  fill
+                                  className="object-cover"
+                                  sizes="40px"
+                                />
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {categoryBadges[product.category || "parfemy"]}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                                {product.brand}
+                              </span>
+                              <p className="font-semibold text-neutral-900 dark:text-white">
+                                {product.name}
+                              </p>
+                            </td>
+                            <td className="py-3 px-4 text-neutral-600 dark:text-neutral-400 font-medium">
+                              {product.category === "obleceni"
+                                ? `${product.clothingSizes?.join(", ") || "S-XL"} · ${product.fit || "Regular"}`
+                                : product.category === "boty"
+                                ? `${product.shoeSizes?.slice(0, 3).join(", ") || "EU 41-43"}... · ${product.condition || "DS"}`
+                                : product.category === "digital"
+                                ? `${product.platform || "Steam"} · ${product.region || "Global"}`
+                                : `${product.volume || "100 ml"} · ${product.concentration || "EdP"}`}
+                            </td>
+                            <td className="py-3 px-4">
+                              <input
+                                type="number"
+                                min={0}
+                                step={10}
+                                value={editState.price}
+                                onChange={(e) =>
+                                  handleProductInputChange(
+                                    product.id,
+                                    "price",
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="w-24 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
+                              />
+                            </td>
+                            <td className="py-3 px-4">
+                              <input
+                                type="number"
+                                min={0}
+                                value={editState.stock}
+                                onChange={(e) =>
+                                  handleProductInputChange(
+                                    product.id,
+                                    "stock",
+                                    Number(e.target.value)
+                                  )
+                                }
+                                className="w-20 text-xs py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-semibold text-neutral-900 dark:text-white focus:outline-none"
+                              />
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="inline-flex items-center gap-1.5">
                                 <button
                                   type="button"
-                                  onClick={() => handleSaveProduct(product.id)}
-                                  disabled={!hasChanges}
-                                  className={`p-1.5 rounded transition-colors ${
-                                    hasChanges
-                                      ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
-                                      : "text-neutral-300 dark:text-neutral-700 cursor-not-allowed"
-                                  }`}
-                                  title="Uložit změny ceny a skladu"
+                                  onClick={() => handleOpenEditProduct(product)}
+                                  className="p-1.5 rounded text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                                  title="Upravit kompletní parametry produktu"
                                 >
-                                  <Save className="h-4 w-4" />
+                                  <Pencil className="h-4 w-4" />
                                 </button>
-                              )}
 
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteProduct(product.id)}
-                                className="p-1.5 rounded text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                                title="Smazat produkt z nabídky"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
+                                {isJustSaved ? (
+                                  <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-semibold px-2 py-1">
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Uloženo</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSaveProduct(product.id)}
+                                    disabled={!hasChanges}
+                                    className={`p-1.5 rounded transition-colors ${
+                                      hasChanges
+                                        ? "text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+                                        : "text-neutral-300 dark:text-neutral-700 cursor-not-allowed"
+                                    }`}
+                                    title="Uložit změny ceny a skladu"
+                                  >
+                                    <Save className="h-4 w-4" />
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteProduct(product.id)}
+                                  className="p-1.5 rounded text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                                  title="Smazat produkt z nabídky"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: Categories & Coming Soon Toggles */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-purple-500" />
+                    <span>Spuštění kategorií & Coming Soon přepínače</span>
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Jedním kliknutím můžete odebrat kategorii z „Coming Soon“ a spustit její prodej, nebo ji dočasně vrátit do přípravného režimu.
+                  </p>
+                </div>
+                {categorySavedSuccess && (
+                  <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 font-semibold animate-in fade-in">
+                    <Check className="h-4 w-4" />
+                    <span>Stav kategorií byl aktualizován na celém webu.</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                {/* Parfémy */}
+                <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base">
+                        🧴
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-neutral-900 dark:text-white text-sm">Parfémy & Vůně</h4>
+                        <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countParfemy}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      categoryStatus.parfemy
+                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                        : "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800"
+                    }`}>
+                      {categoryStatus.parfemy ? "Aktivní katalog" : "Coming Soon"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {categoryStatus.parfemy
+                      ? "Kategorie je aktivní: zákazníci mohou prohlížet flakony a vkládat je do košíku."
+                      : "Kategorie je označena jako Coming Soon: na webu je viditelná se štítkem Již brzy."}
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                    <Link href="/katalog" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
+                      <span>Zobrazit na webu</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={categoryStatus.parfemy ? "outline" : "primary"}
+                      onClick={() => handleToggleCategory("parfemy")}
+                      className="text-xs uppercase tracking-wider font-semibold"
+                    >
+                      {categoryStatus.parfemy ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Oblečení */}
+                <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center font-bold text-base">
+                        👕
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-neutral-900 dark:text-white text-sm">Oblečení & Streetwear</h4>
+                        <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countObleceni}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      categoryStatus.obleceni
+                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                        : "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-400 border border-rose-300 dark:border-rose-800"
+                    }`}>
+                      {categoryStatus.obleceni ? "Aktivní katalog" : "Coming Soon"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {categoryStatus.obleceni
+                      ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat streetwear a módu."
+                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                    <Link href="/obleceni" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
+                      <span>Zobrazit na webu</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={categoryStatus.obleceni ? "outline" : "primary"}
+                      onClick={() => handleToggleCategory("obleceni")}
+                      className="text-xs uppercase tracking-wider font-semibold"
+                    >
+                      {categoryStatus.obleceni ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Boty */}
+                <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center font-bold text-base">
+                        👟
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-neutral-900 dark:text-white text-sm">Boty & Sneakers</h4>
+                        <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countBoty}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      categoryStatus.boty
+                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                        : "bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 border border-cyan-300 dark:border-cyan-800"
+                    }`}>
+                      {categoryStatus.boty ? "Aktivní katalog" : "Coming Soon"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {categoryStatus.boty
+                      ? "Kategorie je aktivní: zákazníci mohou prohlížet a kupovat tenisky a sneakers."
+                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k odběru dropů."}
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                    <Link href="/boty" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
+                      <span>Zobrazit na webu</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={categoryStatus.boty ? "outline" : "primary"}
+                      onClick={() => handleToggleCategory("boty")}
+                      className="text-xs uppercase tracking-wider font-semibold"
+                    >
+                      {categoryStatus.boty ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Digital */}
+                <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-base">
+                        ⚡
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-neutral-900 dark:text-white text-sm">CzechBuy Digital</h4>
+                        <p className="text-[11px] text-neutral-500 font-mono">Položek v adminu: {countDigital}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                      categoryStatus.digital
+                        ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800"
+                        : "bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800"
+                    }`}>
+                      {categoryStatus.digital ? "Aktivní katalog" : "Coming Soon"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                    {categoryStatus.digital
+                      ? "Kategorie je aktivní: zákazníci mohou okamžitě nakupovat herní klíče a licence."
+                      : "Kategorie je uzamčena: zákazníci vidí prezentační teaser s přihlášením k dropům."}
+                  </p>
+                  <div className="pt-2 flex items-center justify-between border-t border-neutral-200/60 dark:border-neutral-800/60">
+                    <Link href="/digital" target="_blank" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white inline-flex items-center gap-1">
+                      <span>Zobrazit na webu</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant={categoryStatus.digital ? "outline" : "primary"}
+                      onClick={() => handleToggleCategory("digital")}
+                      className="text-xs uppercase tracking-wider font-semibold"
+                    >
+                      {categoryStatus.digital ? "Přepnout na Coming Soon" : "Aktivovat kategorii"}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1309,14 +1844,88 @@ export default function AdminDashboardPage() {
       <Modal
         isOpen={isAddProductOpen}
         onClose={() => setIsAddProductOpen(false)}
-        title="Přidat nový originální parfém"
-        description="Vložte autentické údaje o parfému z evropské distribuce."
+        title="Přidat nový produkt do nabídky"
+        description="Vyberte kategorii a vyplňte specifikace nového produktu."
       >
         <form onSubmit={handleCreateProduct} className="space-y-4 text-xs">
+          {/* Category Selector Tabs */}
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Kategorie produktu *
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setNewProductData({
+                    ...newProductData,
+                    category: "parfemy",
+                  })
+                }
+                className={`py-2 px-2 rounded-lg font-bold text-center border transition ${
+                  newProductData.category === "parfemy"
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100"
+                }`}
+              >
+                🧴 Parfémy
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setNewProductData({
+                    ...newProductData,
+                    category: "obleceni",
+                  })
+                }
+                className={`py-2 px-2 rounded-lg font-bold text-center border transition ${
+                  newProductData.category === "obleceni"
+                    ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100"
+                }`}
+              >
+                👕 Oblečení
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setNewProductData({
+                    ...newProductData,
+                    category: "boty",
+                  })
+                }
+                className={`py-2 px-2 rounded-lg font-bold text-center border transition ${
+                  newProductData.category === "boty"
+                    ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100"
+                }`}
+              >
+                👟 Boty
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setNewProductData({
+                    ...newProductData,
+                    category: "digital",
+                  })
+                }
+                className={`py-2 px-2 rounded-lg font-bold text-center border transition ${
+                  newProductData.category === "digital"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100"
+                }`}
+              >
+                ⚡ Digital
+              </button>
+            </div>
+          </div>
+
+          {/* Common Details */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Značka (Brand) *
+                Značka (Brand / Výrobce) *
               </label>
               <input
                 type="text"
@@ -1325,13 +1934,21 @@ export default function AdminDashboardPage() {
                 onChange={(e) =>
                   setNewProductData({ ...newProductData, brand: e.target.value })
                 }
-                placeholder="např. Tom Ford"
+                placeholder={
+                  newProductData.category === "parfemy"
+                    ? "např. Tom Ford"
+                    : newProductData.category === "obleceni"
+                    ? "např. Trapstar / Nike"
+                    : newProductData.category === "boty"
+                    ? "např. Jordan / Nike"
+                    : "např. Steam / Valve / Microsoft"
+                }
                 className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
               />
             </div>
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Název parfému *
+                Název produktu *
               </label>
               <input
                 type="text"
@@ -1340,7 +1957,15 @@ export default function AdminDashboardPage() {
                 onChange={(e) =>
                   setNewProductData({ ...newProductData, name: e.target.value })
                 }
-                placeholder="např. Ombré Leather"
+                placeholder={
+                  newProductData.category === "parfemy"
+                    ? "např. Tobacco Vanille"
+                    : newProductData.category === "obleceni"
+                    ? "např. Irongate Heavy Hoodie"
+                    : newProductData.category === "boty"
+                    ? "např. Dunk Low Retro Panda"
+                    : "např. Steam Gift Card 1000 Kč"
+                }
                 className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
               />
             </div>
@@ -1349,12 +1974,12 @@ export default function AdminDashboardPage() {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Cena (Kč) *
+                Prodejní cena (Kč) *
               </label>
               <input
                 type="number"
                 required
-                min={100}
+                min={1}
                 value={newProductData.price}
                 onChange={(e) =>
                   setNewProductData({
@@ -1362,27 +1987,30 @@ export default function AdminDashboardPage() {
                     price: Number(e.target.value),
                   })
                 }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none font-semibold"
               />
             </div>
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Objem *
+                Původní cena (Kč)
               </label>
               <input
-                type="text"
-                required
-                value={newProductData.volume}
+                type="number"
+                min={0}
+                value={newProductData.originalPrice || ""}
                 onChange={(e) =>
-                  setNewProductData({ ...newProductData, volume: e.target.value })
+                  setNewProductData({
+                    ...newProductData,
+                    originalPrice: Number(e.target.value) || 0,
+                  })
                 }
-                placeholder="100 ml"
+                placeholder="Pro výpočet slevy"
                 className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
               />
             </div>
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Sklad (ks) *
+                Skladová zásoba (ks) *
               </label>
               <input
                 type="number"
@@ -1395,100 +2023,260 @@ export default function AdminDashboardPage() {
                     stock: Number(e.target.value),
                   })
                 }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none font-semibold"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Koncentrace
-              </label>
-              <select
-                value={newProductData.concentration}
-                onChange={(e) =>
-                  setNewProductData({
-                    ...newProductData,
-                    concentration: e.target.value as FragranceConcentration,
-                  })
-                }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
-              >
-                <option value="EdP">EdP (Parfémovaná voda)</option>
-                <option value="EdT">EdT (Toaletní voda)</option>
-                <option value="Parfum">Parfum</option>
-                <option value="Extrait">Extrait de Parfum</option>
-              </select>
+          {/* Category specific fields */}
+          {newProductData.category === "parfemy" && (
+            <div className="space-y-3 p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                Specifikace parfému
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Objem</label>
+                  <input
+                    type="text"
+                    value={newProductData.volume}
+                    onChange={(e) => setNewProductData({ ...newProductData, volume: e.target.value })}
+                    placeholder="100 ml"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Koncentrace</label>
+                  <select
+                    value={newProductData.concentration}
+                    onChange={(e) =>
+                      setNewProductData({
+                        ...newProductData,
+                        concentration: e.target.value as FragranceConcentration,
+                      })
+                    }
+                    className="w-full py-1.5 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="EdP">EdP</option>
+                    <option value="EdT">EdT</option>
+                    <option value="Parfum">Parfum</option>
+                    <option value="Extrait">Extrait</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Určení</label>
+                  <select
+                    value={newProductData.gender}
+                    onChange={(e) =>
+                      setNewProductData({
+                        ...newProductData,
+                        gender: e.target.value as FragranceGender,
+                      })
+                    }
+                    className="w-full py-1.5 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="unisex">Unisex</option>
+                    <option value="panske">Pánské</option>
+                    <option value="damske">Dámské</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={newProductData.headNotes}
+                  onChange={(e) => setNewProductData({ ...newProductData, headNotes: e.target.value })}
+                  placeholder="Hlava vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+                <input
+                  type="text"
+                  value={newProductData.heartNotes}
+                  onChange={(e) => setNewProductData({ ...newProductData, heartNotes: e.target.value })}
+                  placeholder="Srdce vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+                <input
+                  type="text"
+                  value={newProductData.baseNotes}
+                  onChange={(e) => setNewProductData({ ...newProductData, baseNotes: e.target.value })}
+                  placeholder="Základ vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Určení
-              </label>
-              <select
-                value={newProductData.gender}
-                onChange={(e) =>
-                  setNewProductData({
-                    ...newProductData,
-                    gender: e.target.value as FragranceGender,
-                  })
-                }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
-              >
-                <option value="panske">Pánské</option>
-                <option value="damske">Dámské</option>
-                <option value="unisex">Unisex</option>
-              </select>
+          )}
+
+          {newProductData.category === "obleceni" && (
+            <div className="space-y-3 p-3 rounded-lg bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                Specifikace oblečení & streetwearu
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Materiál</label>
+                  <input
+                    type="text"
+                    value={newProductData.material}
+                    onChange={(e) => setNewProductData({ ...newProductData, material: e.target.value })}
+                    placeholder="100% bavlna"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Střih / Fit</label>
+                  <input
+                    type="text"
+                    value={newProductData.fit}
+                    onChange={(e) => setNewProductData({ ...newProductData, fit: e.target.value })}
+                    placeholder="Oversized fit"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Barva</label>
+                  <input
+                    type="text"
+                    value={newProductData.color}
+                    onChange={(e) => setNewProductData({ ...newProductData, color: e.target.value })}
+                    placeholder="Černá"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Dostupné velikosti (oddělené čárkou)</label>
+                <input
+                  type="text"
+                  value={newProductData.clothingSizes.join(", ")}
+                  onChange={(e) =>
+                    setNewProductData({
+                      ...newProductData,
+                      clothingSizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                  placeholder="XS, S, M, L, XL, XXL"
+                  className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {newProductData.category === "boty" && (
+            <div className="space-y-3 p-3 rounded-lg bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                Specifikace tenisek & obuvi
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Barevné provedení (Colorway)</label>
+                  <input
+                    type="text"
+                    value={newProductData.colorway}
+                    onChange={(e) => setNewProductData({ ...newProductData, colorway: e.target.value })}
+                    placeholder="Black / White"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Kód modelu (SKU)</label>
+                  <input
+                    type="text"
+                    value={newProductData.sku}
+                    onChange={(e) => setNewProductData({ ...newProductData, sku: e.target.value })}
+                    placeholder="DD1391-100"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Stav</label>
+                  <input
+                    type="text"
+                    value={newProductData.condition}
+                    onChange={(e) => setNewProductData({ ...newProductData, condition: e.target.value })}
+                    placeholder="Deadstock (Nové v krabici)"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Velikosti EU (oddělené čárkou)</label>
+                <input
+                  type="text"
+                  value={newProductData.shoeSizes.join(", ")}
+                  onChange={(e) =>
+                    setNewProductData({
+                      ...newProductData,
+                      shoeSizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                  placeholder="EU 40, EU 41, EU 42, EU 43, EU 44, EU 45"
+                  className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                />
+              </div>
+            </div>
+          )}
+
+          {newProductData.category === "digital" && (
+            <div className="space-y-3 p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                Specifikace digitálního produktu
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Platforma</label>
+                  <select
+                    value={newProductData.platform}
+                    onChange={(e) => setNewProductData({ ...newProductData, platform: e.target.value })}
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="Steam">Steam</option>
+                    <option value="PlayStation Network">PlayStation Network (PSN)</option>
+                    <option value="Xbox / Microsoft">Xbox / Microsoft Store</option>
+                    <option value="EA / Origin / Ubisoft">EA / Ubisoft</option>
+                    <option value="Software / Office">Software / Licence</option>
+                    <option value="Předplatné">Předplatné (Spotify / Game Pass)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Typ licence / platnosti</label>
+                  <input
+                    type="text"
+                    value={newProductData.licenseType}
+                    onChange={(e) => setNewProductData({ ...newProductData, licenseType: e.target.value })}
+                    placeholder="Trvalá licence / 1 Rok"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Aktivační region</label>
+                  <input
+                    type="text"
+                    value={newProductData.region}
+                    onChange={(e) => setNewProductData({ ...newProductData, region: e.target.value })}
+                    placeholder="Global / Region Free"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Doručení</label>
+                  <input
+                    type="text"
+                    value={newProductData.deliveryTime}
+                    onChange={(e) => setNewProductData({ ...newProductData, deliveryTime: e.target.value })}
+                    placeholder="Okamžitě e-mailem (do 30s)"
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Složení (Hlava / Srdce / Základ)
-            </label>
-            <div className="space-y-1.5">
-              <input
-                type="text"
-                value={newProductData.headNotes}
-                onChange={(e) =>
-                  setNewProductData({
-                    ...newProductData,
-                    headNotes: e.target.value,
-                  })
-                }
-                placeholder="Hlava: např. Bergamot, Šafrán"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-              <input
-                type="text"
-                value={newProductData.heartNotes}
-                onChange={(e) =>
-                  setNewProductData({
-                    ...newProductData,
-                    heartNotes: e.target.value,
-                  })
-                }
-                placeholder="Srdce: např. Kůže, Pačuli"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-              <input
-                type="text"
-                value={newProductData.baseNotes}
-                onChange={(e) =>
-                  setNewProductData({
-                    ...newProductData,
-                    baseNotes: e.target.value,
-                  })
-                }
-                placeholder="Základ: např. Ambroxan, Mech"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Popis parfému
+              Popis produktu
             </label>
             <textarea
               rows={2}
@@ -1499,14 +2287,14 @@ export default function AdminDashboardPage() {
                   description: e.target.value,
                 })
               }
-              placeholder="Charakter vůně, vonné akordy..."
+              placeholder="Detailní informace o produktu, materiálu, střihu či aktivaci..."
               className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
             />
           </div>
 
           <div>
             <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              URL obrázku
+              URL obrázku (volitelné – k dispozici je automatický fallback)
             </label>
             <input
               type="url"
@@ -1517,6 +2305,31 @@ export default function AdminDashboardPage() {
               placeholder="https://images.unsplash.com/..."
               className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
             />
+          </div>
+
+          <div className="flex items-center gap-4 pt-1">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newProductData.featured}
+                onChange={(e) =>
+                  setNewProductData({ ...newProductData, featured: e.target.checked })
+                }
+                className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              />
+              <span>Doporučený produkt (Featured)</span>
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newProductData.isNew}
+                onChange={(e) =>
+                  setNewProductData({ ...newProductData, isNew: e.target.checked })
+                }
+                className="rounded border-neutral-300 text-neutral-900 focus:ring-neutral-900"
+              />
+              <span>Označit jako novinku</span>
+            </label>
           </div>
 
           <div className="pt-3 flex justify-end gap-2 border-t border-neutral-200 dark:border-neutral-800">
@@ -1539,10 +2352,83 @@ export default function AdminDashboardPage() {
       <Modal
         isOpen={isEditProductOpen}
         onClose={() => setIsEditProductOpen(false)}
-        title={`Upravit parfém: ${editingProductData.name || ""}`}
-        description="Upravte veškeré specifikace, cenu, sklad či fotografii parfému."
+        title={`Upravit produkt: ${editingProductData.name || ""}`}
+        description="Upravte veškeré specifikace, kategorii, cenu, sklad či fotografii produktu."
       >
         <form onSubmit={handleSaveEditedProduct} className="space-y-4 text-xs">
+          {/* Category Selector Tabs */}
+          <div>
+            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+              Kategorie produktu *
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    category: "parfemy",
+                  })
+                }
+                className={`py-1.5 px-2 rounded-lg font-bold text-center border transition ${
+                  editingProductData.category === "parfemy"
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                }`}
+              >
+                🧴 Parfémy
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    category: "obleceni",
+                  })
+                }
+                className={`py-1.5 px-2 rounded-lg font-bold text-center border transition ${
+                  editingProductData.category === "obleceni"
+                    ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                }`}
+              >
+                👕 Oblečení
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    category: "boty",
+                  })
+                }
+                className={`py-1.5 px-2 rounded-lg font-bold text-center border transition ${
+                  editingProductData.category === "boty"
+                    ? "bg-cyan-600 text-white border-cyan-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                }`}
+              >
+                👟 Boty
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setEditingProductData({
+                    ...editingProductData,
+                    category: "digital",
+                  })
+                }
+                className={`py-1.5 px-2 rounded-lg font-bold text-center border transition ${
+                  editingProductData.category === "digital"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
+                    : "bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300"
+                }`}
+              >
+                ⚡ Digital
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
@@ -1560,7 +2446,7 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Název parfému *
+                Název produktu *
               </label>
               <input
                 type="text"
@@ -1582,7 +2468,7 @@ export default function AdminDashboardPage() {
               <input
                 type="number"
                 required
-                min={100}
+                min={1}
                 value={editingProductData.price}
                 onChange={(e) =>
                   setEditingProductData({
@@ -1590,19 +2476,22 @@ export default function AdminDashboardPage() {
                     price: Number(e.target.value),
                   })
                 }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none font-semibold"
               />
             </div>
             <div>
               <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Objem *
+                Původní cena (Kč)
               </label>
               <input
-                type="text"
-                required
-                value={editingProductData.volume}
+                type="number"
+                min={0}
+                value={editingProductData.originalPrice || ""}
                 onChange={(e) =>
-                  setEditingProductData({ ...editingProductData, volume: e.target.value })
+                  setEditingProductData({
+                    ...editingProductData,
+                    originalPrice: Number(e.target.value) || 0,
+                  })
                 }
                 className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
               />
@@ -1622,100 +2511,276 @@ export default function AdminDashboardPage() {
                     stock: Number(e.target.value),
                   })
                 }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
+                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none font-semibold"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Koncentrace
-              </label>
-              <select
-                value={editingProductData.concentration}
-                onChange={(e) =>
-                  setEditingProductData({
-                    ...editingProductData,
-                    concentration: e.target.value as FragranceConcentration,
-                  })
-                }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
-              >
-                <option value="EdP">EdP (Parfémovaná voda)</option>
-                <option value="EdT">EdT (Toaletní voda)</option>
-                <option value="Parfum">Parfum</option>
-                <option value="Extrait">Extrait de Parfum</option>
-              </select>
+          {/* Category specific fields for Edit */}
+          {editingProductData.category === "parfemy" && (
+            <div className="space-y-3 p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                Specifikace parfému
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Objem</label>
+                  <input
+                    type="text"
+                    value={editingProductData.volume}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, volume: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Koncentrace</label>
+                  <select
+                    value={editingProductData.concentration}
+                    onChange={(e) =>
+                      setEditingProductData({
+                        ...editingProductData,
+                        concentration: e.target.value as FragranceConcentration,
+                      })
+                    }
+                    className="w-full py-1.5 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="EdP">EdP</option>
+                    <option value="EdT">EdT</option>
+                    <option value="Parfum">Parfum</option>
+                    <option value="Extrait">Extrait</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Určení</label>
+                  <select
+                    value={editingProductData.gender}
+                    onChange={(e) =>
+                      setEditingProductData({
+                        ...editingProductData,
+                        gender: e.target.value as FragranceGender,
+                      })
+                    }
+                    className="w-full py-1.5 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="unisex">Unisex</option>
+                    <option value="panske">Pánské</option>
+                    <option value="damske">Dámské</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={editingProductData.headNotes}
+                  onChange={(e) =>
+                    setEditingProductData({ ...editingProductData, headNotes: e.target.value })
+                  }
+                  placeholder="Hlava vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+                <input
+                  type="text"
+                  value={editingProductData.heartNotes}
+                  onChange={(e) =>
+                    setEditingProductData({ ...editingProductData, heartNotes: e.target.value })
+                  }
+                  placeholder="Srdce vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+                <input
+                  type="text"
+                  value={editingProductData.baseNotes}
+                  onChange={(e) =>
+                    setEditingProductData({ ...editingProductData, baseNotes: e.target.value })
+                  }
+                  placeholder="Základ vůně"
+                  className="py-1 px-2 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                Určení
-              </label>
-              <select
-                value={editingProductData.gender}
-                onChange={(e) =>
-                  setEditingProductData({
-                    ...editingProductData,
-                    gender: e.target.value as FragranceGender,
-                  })
-                }
-                className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 focus:outline-none"
-              >
-                <option value="panske">Pánské</option>
-                <option value="damske">Dámské</option>
-                <option value="unisex">Unisex</option>
-              </select>
+          )}
+
+          {editingProductData.category === "obleceni" && (
+            <div className="space-y-3 p-3 rounded-lg bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                Specifikace oblečení & streetwearu
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Materiál</label>
+                  <input
+                    type="text"
+                    value={editingProductData.material}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, material: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Střih / Fit</label>
+                  <input
+                    type="text"
+                    value={editingProductData.fit}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, fit: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Barva</label>
+                  <input
+                    type="text"
+                    value={editingProductData.color}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, color: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Dostupné velikosti (oddělené čárkou)</label>
+                <input
+                  type="text"
+                  value={editingProductData.clothingSizes.join(", ")}
+                  onChange={(e) =>
+                    setEditingProductData({
+                      ...editingProductData,
+                      clothingSizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                  className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                />
+              </div>
             </div>
-          </div>
+          )}
+
+          {editingProductData.category === "boty" && (
+            <div className="space-y-3 p-3 rounded-lg bg-cyan-50/50 dark:bg-cyan-950/20 border border-cyan-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
+                Specifikace tenisek & obuvi
+              </span>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Barevné provedení (Colorway)</label>
+                  <input
+                    type="text"
+                    value={editingProductData.colorway}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, colorway: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Kód modelu (SKU)</label>
+                  <input
+                    type="text"
+                    value={editingProductData.sku}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, sku: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Stav</label>
+                  <input
+                    type="text"
+                    value={editingProductData.condition}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, condition: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block font-medium mb-1">Velikosti EU (oddělené čárkou)</label>
+                <input
+                  type="text"
+                  value={editingProductData.shoeSizes.join(", ")}
+                  onChange={(e) =>
+                    setEditingProductData({
+                      ...editingProductData,
+                      shoeSizes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                  className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                />
+              </div>
+            </div>
+          )}
+
+          {editingProductData.category === "digital" && (
+            <div className="space-y-3 p-3 rounded-lg bg-purple-50/50 dark:bg-purple-950/20 border border-purple-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                Specifikace digitálního produktu
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Platforma</label>
+                  <select
+                    value={editingProductData.platform}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, platform: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  >
+                    <option value="Steam">Steam</option>
+                    <option value="PlayStation Network">PlayStation Network (PSN)</option>
+                    <option value="Xbox / Microsoft">Xbox / Microsoft Store</option>
+                    <option value="EA / Origin / Ubisoft">EA / Ubisoft</option>
+                    <option value="Software / Office">Software / Licence</option>
+                    <option value="Předplatné">Předplatné</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Typ licence</label>
+                  <input
+                    type="text"
+                    value={editingProductData.licenseType}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, licenseType: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-medium mb-1">Aktivační region</label>
+                  <input
+                    type="text"
+                    value={editingProductData.region}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, region: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-medium mb-1">Doručení</label>
+                  <input
+                    type="text"
+                    value={editingProductData.deliveryTime}
+                    onChange={(e) =>
+                      setEditingProductData({ ...editingProductData, deliveryTime: e.target.value })
+                    }
+                    className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Složení (Hlava / Srdce / Základ)
-            </label>
-            <div className="space-y-1.5">
-              <input
-                type="text"
-                value={editingProductData.headNotes}
-                onChange={(e) =>
-                  setEditingProductData({
-                    ...editingProductData,
-                    headNotes: e.target.value,
-                  })
-                }
-                placeholder="Hlava: např. Bergamot, Šafrán"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-              <input
-                type="text"
-                value={editingProductData.heartNotes}
-                onChange={(e) =>
-                  setEditingProductData({
-                    ...editingProductData,
-                    heartNotes: e.target.value,
-                  })
-                }
-                placeholder="Srdce: např. Kůže, Pačuli"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-              <input
-                type="text"
-                value={editingProductData.baseNotes}
-                onChange={(e) =>
-                  setEditingProductData({
-                    ...editingProductData,
-                    baseNotes: e.target.value,
-                  })
-                }
-                placeholder="Základ: např. Ambroxan, Mech"
-                className="w-full py-1.5 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-              Popis parfému
+              Popis produktu
             </label>
             <textarea
               rows={3}
@@ -1726,7 +2791,6 @@ export default function AdminDashboardPage() {
                   description: e.target.value,
                 })
               }
-              placeholder="Charakter vůně, vonné akordy..."
               className="w-full py-2 px-3 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-950 text-xs"
             />
           </div>

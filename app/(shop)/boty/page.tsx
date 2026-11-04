@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import {
@@ -8,19 +10,13 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
-  Sparkle,
   Flame,
-  CheckCircle2,
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { Button } from "@/components/ui/button";
+import { CategoryCatalogView } from "@/components/shop/category-catalog-view";
 
-export const metadata = {
-  title: "Boty & Tenisky (Coming Soon) | CzechBuy",
-  description: "Připravujeme nabídku limitovaných tenisek, ikonických siluet a prémiové obuvi s garancí 100% originality a autenticity.",
-};
-
-export default function BotyPage() {
+function BotyComingSoon() {
   const discordInvite =
     process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy";
 
@@ -64,9 +60,8 @@ export default function BotyPage() {
         </span>
       </nav>
 
-      {/* Hero section with sneakerhead cyan/blue ambient lighting */}
+      {/* Hero section */}
       <div className="relative rounded-3xl overflow-hidden bg-neutral-950 text-white border border-neutral-800 p-8 sm:p-14 lg:p-20 shadow-2xl mb-16">
-        {/* Background ambient lighting */}
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/25 rounded-full blur-3xl pointer-events-none" />
 
@@ -192,5 +187,20 @@ export default function BotyPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function BotyPage() {
+  return (
+    <CategoryCatalogView
+      category="boty"
+      title="CzechBuy Boty & Tenisky"
+      subtitle="Limitované edice tenisek, retro ikony i luxusní obuv s dvojitou garancí pravosti a 100% Deadstock stavem."
+      badgeText="Sneakers & Obuv"
+      accentColor="cyan"
+      emptyTitle="Kolekce tenisek se připravuje"
+      emptyDescription="Momentálně připravujeme naskladnění limitovaných tenisek. Přidejte modely v administraci nebo zkontrolujte nabídku brzy."
+      comingSoonComponent={<BotyComingSoon />}
+    />
   );
 }

@@ -7,10 +7,12 @@ import { Search, ShoppingBag, Menu, X, Sparkles, ShieldCheck, ExternalLink } fro
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { useCart } from "@/lib/cart-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useCategoryStatus } from "@/lib/use-categories";
 
 export function Header() {
   const router = useRouter();
   const { itemsCount, setIsOpen } = useCart();
+  const { status: categoryStatus } = useCategoryStatus();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -91,27 +93,33 @@ export function Header() {
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Oblečení
-              <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-rose-200 dark:border-rose-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.obleceni && (
+                <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-rose-200 dark:border-rose-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/boty"
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Boty
-              <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-cyan-200 dark:border-cyan-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.boty && (
+                <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-cyan-200 dark:border-cyan-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/digital"
               className="text-neutral-500 hover:text-neutral-900 dark:hover:text-white uppercase tracking-wider text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
               Digital
-              <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-purple-200 dark:border-purple-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.digital && (
+                <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-1.5 py-0.5 rounded tracking-normal normal-case border border-purple-200 dark:border-purple-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
           </nav>
 
@@ -194,9 +202,11 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Oblečení</span>
-              <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.obleceni && (
+                <span className="text-[10px] bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/boty"
@@ -204,9 +214,11 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Boty</span>
-              <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.boty && (
+                <span className="text-[10px] bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 font-semibold px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
             <Link
               href="/digital"
@@ -214,9 +226,11 @@ export function Header() {
               className="flex items-center justify-between text-neutral-700 dark:text-neutral-200 text-sm py-1 hover:text-neutral-900 dark:hover:text-white"
             >
               <span>Digital</span>
-              <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/60">
-                Coming Soon
-              </span>
+              {!categoryStatus.digital && (
+                <span className="text-[10px] bg-purple-100 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 font-semibold px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/60">
+                  Coming Soon
+                </span>
+              )}
             </Link>
 
             {/* Mobile Discord & Instagram Community Links */}

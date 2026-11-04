@@ -40,7 +40,7 @@ export default function ProductDetailPage() {
       setSelectedVariant(product.volumeVariants[0]);
     } else if (product) {
       setSelectedVariant({
-        volume: product.volume,
+        volume: product.volume || product.platform || (product.clothingSizes ? product.clothingSizes[0] : (product.shoeSizes ? product.shoeSizes[0] : "Standard")),
         price: product.price,
         inStock: product.stock,
       });
@@ -59,11 +59,16 @@ export default function ProductDetailPage() {
     notFound();
   }
 
+  const defaultVariantVolume =
+    product.volume ||
+    product.platform ||
+    (product.clothingSizes ? product.clothingSizes[0] : (product.shoeSizes ? product.shoeSizes[0] : "Standard"));
+
   const activeVariant =
     selectedVariant ||
     (product.volumeVariants && product.volumeVariants.length > 0
       ? product.volumeVariants[0]
-      : { volume: product.volume, price: product.price, inStock: product.stock });
+      : { volume: defaultVariantVolume, price: product.price, inStock: product.stock });
 
   const handleAddToCart = () => {
     addToCart(product, activeVariant, quantity);
@@ -104,7 +109,7 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
           <div className="relative aspect-4/5 w-full bg-neutral-100 dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-sm">
             <Image
-              src={product.image}
+              src={product.image || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80"}
               alt={`${product.brand} ${product.name}`}
               fill
               priority
@@ -284,40 +289,42 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Scent Pyramid (Pyramida vůně) */}
-          <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900 dark:text-white">
-                Složení a pyramida vůně
-              </h3>
+          {product.scentNotes && (
+            <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="h-4 w-4 text-amber-500" />
+                <h3 className="font-bold text-xs uppercase tracking-wider text-neutral-900 dark:text-white">
+                  Složení a pyramida vůně
+                </h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Hlava (vrchní tóny)
+                  </span>
+                  <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
+                    {product.scentNotes.head?.join(", ") || "—"}
+                  </p>
+                </div>
+                <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Srdce (střední tóny)
+                  </span>
+                  <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
+                    {product.scentNotes.heart?.join(", ") || "—"}
+                  </p>
+                </div>
+                <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Základ (spodní tóny)
+                  </span>
+                  <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
+                    {product.scentNotes.base?.join(", ") || "—"}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  Hlava (vrchní tóny)
-                </span>
-                <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
-                  {product.scentNotes.head.join(", ")}
-                </p>
-              </div>
-              <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  Srdce (střední tóny)
-                </span>
-                <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
-                  {product.scentNotes.heart.join(", ")}
-                </p>
-              </div>
-              <div className="bg-neutral-50 dark:bg-neutral-900 p-3.5 rounded-lg border border-neutral-200 dark:border-neutral-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                  Základ (spodní tóny)
-                </span>
-                <p className="text-xs font-semibold text-neutral-900 dark:text-white mt-1">
-                  {product.scentNotes.base.join(", ")}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Description */}
           <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800">

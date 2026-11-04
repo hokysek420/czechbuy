@@ -653,7 +653,7 @@ export default function CheckoutPage() {
                   <div key={item.id} className="py-2.5 flex items-center gap-3">
                     <div className="relative h-12 w-10 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden shrink-0">
                       <Image
-                        src={item.image}
+                        src={item.image || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80"}
                         alt={item.name}
                         fill
                         className="object-cover"

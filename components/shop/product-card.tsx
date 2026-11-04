@@ -34,7 +34,7 @@ export function ProductCard({ product }: ProductCardProps) {
       {/* Product Image */}
       <Link href={`/produkt/${product.id}`} className="relative aspect-4/5 w-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden block">
         <Image
-          src={product.image}
+          src={product.image || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80"}
           alt={`${product.brand} ${product.name}`}
           fill
           className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
@@ -57,7 +57,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <div className="absolute top-2.5 right-2.5 z-10">
           <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-black/60 backdrop-blur-xs text-white">
-            {product.concentration}
+            {product.concentration || product.platform || (product.category === 'obleceni' ? 'Streetwear' : product.category === 'boty' ? 'Sneakers' : 'Digital')}
           </span>
         </div>
 
@@ -92,7 +92,7 @@ export function ProductCard({ product }: ProductCardProps) {
               {product.brand}
             </span>
             <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-              {product.volume}
+              {product.volume || product.platform || (product.clothingSizes ? product.clothingSizes.join(", ") : (product.shoeSizes ? product.shoeSizes.slice(0, 3).join(", ") : ''))}
             </span>
           </div>
 
@@ -103,7 +103,12 @@ export function ProductCard({ product }: ProductCardProps) {
           </Link>
 
           <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-1">
-            {product.scentNotes.head.slice(0, 2).join(", ")}
+            {product.scentNotes?.head?.slice(0, 2).join(", ") ||
+              product.material ||
+              product.colorway ||
+              product.platform ||
+              product.description ||
+              "Originální produkt CzechBuy"}
           </p>
         </div>
 

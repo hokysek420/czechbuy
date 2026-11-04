@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import {
@@ -10,17 +12,12 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
-  Layers,
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { Button } from "@/components/ui/button";
+import { CategoryCatalogView } from "@/components/shop/category-catalog-view";
 
-export const metadata = {
-  title: "Digital (Coming Soon) | CzechBuy",
-  description: "Připravujeme digitální sekci CzechBuy – herní klíče, licence, předplatné a dárkové poukazy s okamžitým doručením.",
-};
-
-export default function DigitalPage() {
+function DigitalComingSoon() {
   const discordInvite =
     process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy";
 
@@ -64,9 +61,8 @@ export default function DigitalPage() {
         </span>
       </nav>
 
-      {/* Hero section with high-fashion cyber aesthetic */}
+      {/* Hero section */}
       <div className="relative rounded-3xl overflow-hidden bg-neutral-950 text-white border border-neutral-800 p-8 sm:p-14 lg:p-20 shadow-2xl mb-16">
-        {/* Background ambient lighting */}
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -192,5 +188,20 @@ export default function DigitalPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function DigitalPage() {
+  return (
+    <CategoryCatalogView
+      category="digital"
+      title="CzechBuy Digital"
+      subtitle="Herní klíče, software licence a předplatné s okamžitým automatickým doručením do e-mailu do 30 sekund."
+      badgeText="Digitální distribuce"
+      accentColor="purple"
+      emptyTitle="Digitální sekce se připravuje"
+      emptyDescription="Momentálně připravujeme naskladnění herních klíčů a licencí. Přidejte položky v administraci nebo zkontrolujte nabídku brzy."
+      comingSoonComponent={<DigitalComingSoon />}
+    />
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import {
@@ -14,13 +16,9 @@ import {
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { Button } from "@/components/ui/button";
+import { CategoryCatalogView } from "@/components/shop/category-catalog-view";
 
-export const metadata = {
-  title: "Oblečení & Streetwear (Coming Soon) | CzechBuy",
-  description: "Připravujeme kurátorský výběr evropského streetwearu, prémiových mikin, triček a designérské módy s garancí 100% pravosti.",
-};
-
-export default function ObleceniPage() {
+function ObleceniComingSoon() {
   const discordInvite =
     process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy";
 
@@ -66,7 +64,6 @@ export default function ObleceniPage() {
 
       {/* Hero section */}
       <div className="relative rounded-3xl overflow-hidden bg-neutral-950 text-white border border-neutral-800 p-8 sm:p-14 lg:p-20 shadow-2xl mb-16">
-        {/* Background ambient lighting */}
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-rose-600/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
 
@@ -192,5 +189,20 @@ export default function ObleceniPage() {
         </a>
       </div>
     </div>
+  );
+}
+
+export default function ObleceniPage() {
+  return (
+    <CategoryCatalogView
+      category="obleceni"
+      title="CzechBuy Oblečení"
+      subtitle="Kurátorský výběr evropského streetwearu, limitovaných dropů a prémiové módy s garancí 100% originality."
+      badgeText="Streetwear & Móda"
+      accentColor="rose"
+      emptyTitle="Kolekce oblečení se připravuje"
+      emptyDescription="Momentálně připravujeme naskladnění nového streetwearu. Přidejte kousky v administraci nebo zkontrolujte nabídku brzy."
+      comingSoonComponent={<ObleceniComingSoon />}
+    />
   );
 }

@@ -50,7 +50,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = (product: Product, variant?: VolumeVariant, quantity = 1) => {
     const selectedVariant = variant || (product.volumeVariants && product.volumeVariants.length > 0
       ? product.volumeVariants[0]
-      : { volume: product.volume, price: product.price, inStock: product.stock });
+      : {
+          volume:
+            product.volume ||
+            product.platform ||
+            (product.clothingSizes ? product.clothingSizes[0] : product.shoeSizes ? product.shoeSizes[0] : "1 ks"),
+          price: product.price,
+          inStock: product.stock,
+        });
 
     const itemId = `${product.id}-${selectedVariant.volume}`;
 
@@ -67,8 +74,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         name: product.name,
         brand: product.brand,
         volume: selectedVariant.volume,
+        category: product.category,
         price: selectedVariant.price,
-        image: product.image,
+        image: product.image || "",
         quantity,
         concentration: product.concentration,
       };

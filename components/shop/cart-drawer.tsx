@@ -93,7 +93,7 @@ export function CartDrawer() {
                 <div key={item.id} className="py-4 flex gap-4">
                   <div className="relative h-20 w-16 bg-neutral-100 dark:bg-neutral-800 rounded overflow-hidden shrink-0">
                     <Image
-                      src={item.image}
+                      src={item.image || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=1000&q=80"}
                       alt={item.name}
                       fill
                       className="object-cover"

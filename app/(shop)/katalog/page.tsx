@@ -56,11 +56,13 @@ function CatalogContent() {
         const query = filters.search.toLowerCase();
         const matchesName = product.name.toLowerCase().includes(query);
         const matchesBrand = product.brand.toLowerCase().includes(query);
-        const matchesNotes = [
-          ...product.scentNotes.head,
-          ...product.scentNotes.heart,
-          ...product.scentNotes.base,
-        ].some((note) => note.toLowerCase().includes(query));
+        const matchesNotes = product.scentNotes
+          ? [
+              ...(product.scentNotes.head || []),
+              ...(product.scentNotes.heart || []),
+              ...(product.scentNotes.base || []),
+            ].some((note) => note.toLowerCase().includes(query))
+          : false;
 
         if (!matchesName && !matchesBrand && !matchesNotes) {
           return false;
