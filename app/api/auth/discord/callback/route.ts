@@ -4,6 +4,7 @@ import {
   DISCORD_GUILD_ID,
   DISCORD_USER_COOKIE,
   getDiscordAvatarUrl,
+  getBaseUrl,
 } from "@/lib/discord-auth";
 import { DiscordUser } from "@/types";
 
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
-  const baseUrl = `${url.protocol}//${url.host}`;
+  const baseUrl = getBaseUrl(request);
 
   if (error || !code) {
     return NextResponse.redirect(`${baseUrl}/prihlaseni?error=${encodeURIComponent(error || "Chybějící autorizační kód")}`);

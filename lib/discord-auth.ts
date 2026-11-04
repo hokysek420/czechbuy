@@ -12,6 +12,32 @@ export const DISCORD_USER_COOKIE = "czechbuy_discord_user";
 export const DISCORD_USER_STORAGE_KEY = "czechbuy_discord_user_v1";
 
 /**
+ * Robust base URL resolver supporting proxies (Vercel, Cloudflare, etc.)
+ * Defaults to https://www.czechbuy.com in production.
+ */
+export function getBaseUrl(request?: Request): string {
+  if (request) {
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const host = forwardedHost || request.headers.get("host");
+    if (host) {
+      const proto = forwardedProto || (host.includes("localhost") ? "http" : "https");
+      return `${proto}://${host}`;
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  }
+
+  return "https://www.czechbuy.com";
+}
+
+/**
  * Returns formatted avatar URL for a Discord user
  */
 export function getDiscordAvatarUrl(user: { id?: string; avatar?: string | null; discriminator?: string }): string {
@@ -30,12 +56,7 @@ export function getDiscordAvatarUrl(user: { id?: string; avatar?: string | null;
  * Builds the official Discord OAuth2 authorization URL
  */
 export function getDiscordOAuthUrl(baseUrl?: string): string {
-  const origin =
-    baseUrl ||
-    (typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
-
+  const origin = baseUrl || getBaseUrl();
   const redirectUri = `${origin}/api/auth/discord/callback`;
 
   const params = new URLSearchParams({
@@ -54,12 +75,7 @@ export function getDiscordOAuthUrl(baseUrl?: string): string {
  * Useful when client_secret is not yet configured on the server
  */
 export function getDiscordImplicitOAuthUrl(baseUrl?: string): string {
-  const origin =
-    baseUrl ||
-    (typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000");
-
+  const origin = baseUrl || getBaseUrl();
   const redirectUri = `${origin}/prihlaseni/callback`;
 
   const params = new URLSearchParams({
