@@ -16,6 +16,9 @@ export function getInitialProducts(): Product[] {
     try {
       // Purge any legacy localStorage keys that may hold old static mock items
       localStorage.removeItem("czechbuy_admin_products_v1");
+      localStorage.removeItem("czechbuy_mock_products");
+      localStorage.removeItem("czechbuy_products");
+      localStorage.removeItem("czechbuy_catalog");
 
       const stored = localStorage.getItem(PRODUCTS_STORAGE_KEY);
       if (stored) {

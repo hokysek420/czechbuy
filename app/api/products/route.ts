@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { Product } from "@/types";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // In-memory server store for products (starts completely empty)
 let serverProducts: Product[] = [];
 
