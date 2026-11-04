@@ -175,7 +175,7 @@ export function Header() {
                 title="Přihlásit se přes Discord"
               >
                 <DiscordIcon className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
-                <span className="hidden sm:inline text-[11px]">Přihlásit se</span>
+                <span className="text-[11px] font-semibold">Discord</span>
               </Link>
             )}
 

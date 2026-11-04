@@ -134,14 +134,14 @@ export default function ComingSoonCountdownPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/prihlaseni"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-xs font-semibold text-[#5865F2] dark:text-[#7983F5] transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-xs font-semibold text-[#5865F2] dark:text-[#7983F5] transition"
                 >
                   <img
                     src={discordUser.avatarUrl}
                     alt={discordUser.username}
                     className="w-4 h-4 rounded-full"
                   />
-                  <span>@{discordUser.username}</span>
+                  <span className="hidden sm:inline">@{discordUser.username}</span>
                   {discordUser.isCzechBuyFam && (
                     <span className="text-[10px] bg-[#5865F2] text-white px-1.5 py-0.2 rounded-full font-bold">
                       VIP
@@ -156,16 +156,15 @@ export default function ComingSoonCountdownPage() {
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
-            ) : mounted ? (
+            ) : (
               <Link
                 href="/prihlaseni"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold shadow-xs transition active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-bold shadow-xs transition active:scale-95"
               >
                 <DiscordIcon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Discord Login</span>
-                <span className="sm:hidden">Login</span>
+                <span>Discord Login</span>
               </Link>
-            ) : null}
+            )}
             <ThemeToggle />
           </div>
         </div>
@@ -244,6 +243,28 @@ export default function ComingSoonCountdownPage() {
             <p className="mt-4 text-xs font-medium text-neutral-500 dark:text-neutral-400">
               Stanovený termín zahájení: <strong>21. listopadu 2026 ve 20:00 SEČ</strong>
             </p>
+
+            {/* Prominent VIP Discord Login Action */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+              {mounted && isDiscordLoggedIn && discordUser ? (
+                <Link
+                  href="/parfemy"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs uppercase tracking-wider shadow-md hover:opacity-90 transition active:scale-[0.98]"
+                >
+                  <span>Vstoupit do obchodu (VIP Přístup)</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : (
+                <Link
+                  href="/prihlaseni"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+                >
+                  <DiscordIcon className="h-4 w-4" />
+                  <span>Přihlásit se přes Discord</span>
+                  <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full ml-1">VIP</span>
+                </Link>
+              )}
+            </div>
           </div>
 
           {/* Email Notification Subscription (Upozornit na spuštění) */}
