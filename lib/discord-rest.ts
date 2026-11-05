@@ -4,10 +4,12 @@
  * Works seamlessly in Next.js Serverless and Edge runtimes on Vercel.
  */
 
+import { DISCORD_BOT_TOKEN } from './discord-auth';
+
 const DISCORD_API = 'https://discord.com/api/v10';
 
 function getBotToken(): string {
-  const token = process.env.DISCORD_BOT_TOKEN;
+  const token = process.env.DISCORD_BOT_TOKEN || DISCORD_BOT_TOKEN;
   if (!token) {
     throw new Error('Chybí DISCORD_BOT_TOKEN v proměnných prostředí!');
   }
@@ -51,6 +53,13 @@ export async function discordFetch(endpoint: string, options: RequestInit = {}) 
   }
 
   return response.json();
+}
+
+/**
+ * Fetch all channels in a guild
+ */
+export async function getGuildChannels(guildId: string): Promise<any[]> {
+  return discordFetch(`/guilds/${guildId}/channels`, { method: 'GET' });
 }
 
 /**

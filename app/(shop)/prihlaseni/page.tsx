@@ -15,9 +15,14 @@ import {
   RefreshCw,
   Crown,
   User,
+  MessageSquarePlus,
+  ExternalLink,
+  MessageSquare,
+  Lock,
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { Button } from "@/components/ui/button";
+import { DiscordTicketModal } from "@/components/shop/discord-ticket-modal";
 
 function PrihlaseniContent() {
   const { user, isLoggedIn, login, logout, testLogin, refreshVipStatus } = useDiscordAuth();
@@ -51,10 +56,31 @@ function PrihlaseniContent() {
         ]
       : [];
 
-  // Auto-sync roles on page load
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [isLoadingTickets, setIsLoadingTickets] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+
+  const fetchUserTickets = async () => {
+    if (!user?.id) return;
+    setIsLoadingTickets(true);
+    try {
+      const res = await fetch(`/api/discord/tickets?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.tickets)) {
+          setTickets(data.tickets);
+        }
+      }
+    } catch {} finally {
+      setIsLoadingTickets(false);
+    }
+  };
+
+  // Auto-sync roles and tickets on page load
   useEffect(() => {
     if (user?.id) {
       refreshVipStatus();
+      fetchUserTickets();
     }
   }, [user?.id]);
 
@@ -222,7 +248,7 @@ function PrihlaseniContent() {
                 {isOwner
                   ? "Vlastník serveru a plný přístup do administrace"
                   : isVip
-                  ? "Aktivní VIP výhody a přednostní přístup"
+                  ? "Aktivní VIP výhody a prioritní Discord podpora"
                   : user.roleName
                   ? "Oficiální role ze serveru CzechBuy Fam"
                   : "Bez VIP role na Discordu"}
@@ -268,6 +294,83 @@ function PrihlaseniContent() {
             </div>
           )}
 
+          {/* Connected Ticket System Section */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-[#5865F2]/10 via-[#5865F2]/5 to-transparent border border-[#5865F2]/25 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#5865F2] text-white flex items-center justify-center shrink-0 shadow-md">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                    <span>Zákaznická Podpora & Discord Tickety</span>
+                    {isOwner ? (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-500 border border-rose-500/30">Owner Priority</span>
+                    ) : isVip ? (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 border border-amber-500/30">VIP Priorita</span>
+                    ) : null}
+                  </h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Máte dotaz k objednávce nebo sortimentu? Založte ticket propojený přímo s naším týmem na Discordu.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsTicketModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs uppercase tracking-wider shadow-sm transition shrink-0"
+              >
+                <MessageSquarePlus className="h-4 w-4" />
+                <span>Nový ticket</span>
+              </button>
+            </div>
+
+            {/* List of active tickets for this user if any */}
+            {tickets.length > 0 ? (
+              <div className="space-y-2 pt-2 border-t border-[#5865F2]/20">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 block">
+                  Vaše aktivní tickety na Discordu ({tickets.length}):
+                </span>
+                <div className="space-y-2">
+                  {tickets.map((t) => (
+                    <div
+                      key={t.id}
+                      className="p-3 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3 shadow-xs"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                          <span className="font-bold text-xs text-neutral-900 dark:text-white truncate">
+                            #{t.name}
+                          </span>
+                        </div>
+                        {t.topic && (
+                          <p className="text-[11px] text-neutral-500 truncate mt-0.5 max-w-[280px] sm:max-w-md">
+                            {t.topic}
+                          </p>
+                        )}
+                      </div>
+                      <a
+                        href={t.discordUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#5865F2]/10 hover:bg-[#5865F2] text-[#5865F2] hover:text-white transition text-xs font-bold shrink-0"
+                      >
+                        <span>Otevřít na Discordu</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-neutral-400 italic">
+                Zatím nemáte žádný otevřený ticket. Nový dotaz můžete kdykoliv založit kliknutím na tlačítko výše.
+              </p>
+            )}
+          </div>
+
           {/* Action buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
             <button
@@ -302,7 +405,7 @@ function PrihlaseniContent() {
                 Přihlášení přes Discord
               </h1>
               <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                Přihlaste se svým Discord účtem. Pokud máte na našem serveru roli <strong>VIP Customer</strong>, získáte automaticky status VIP na webu i přednostní přístup k dropům.
+                Přihlaste se svým Discord účtem. Pokud máte na našem serveru roli <strong>VIP Customer</strong>, získáte automaticky status VIP na webu, slevy i prioritní Discord podporu.
               </p>
             </div>
 
@@ -455,6 +558,13 @@ function PrihlaseniContent() {
           </div>
         </div>
       )}
+
+      {/* Discord Support Ticket Creation Modal */}
+      <DiscordTicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        onTicketCreated={() => fetchUserTickets()}
+      />
     </div>
   );
 }

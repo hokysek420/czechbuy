@@ -84,10 +84,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 5. Scenario: Discord VIP early access check (isVipUser calculated above)
-  if (isVipUser) {
-    return NextResponse.next();
-  }
+  // NOTE: VIP role DOES NOT have early access to bypass countdown (only Owner/Admin can enter during countdown)
 
   // If already on the countdown page, allow
   if (pathname === COUNTDOWN_PATH) {

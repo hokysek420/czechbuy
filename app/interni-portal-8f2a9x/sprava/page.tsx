@@ -34,6 +34,9 @@ import {
   Crown,
   Shield,
   ShieldCheck,
+  MessageSquare,
+  MessageSquarePlus,
+  RefreshCw,
 } from "lucide-react";
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { Product, Order, OrderStatus, ProductCategory, FragranceConcentration, FragranceGender } from "@/types";
@@ -84,6 +87,73 @@ export default function AdminDashboardPage() {
     message?: string;
   } | null>(null);
   const [isTestingDiscord, setIsTestingDiscord] = useState(false);
+
+  // Live Discord Support Tickets state
+  const [adminTickets, setAdminTickets] = useState<any[]>([]);
+  const [isLoadingAdminTickets, setIsLoadingAdminTickets] = useState(false);
+  const [ticketActionMsg, setTicketActionMsg] = useState<{ id?: string; text: string; isError?: boolean } | null>(null);
+  const [replyMessageText, setReplyMessageText] = useState<Record<string, string>>({});
+  const [isSendingTicketReply, setIsSendingTicketReply] = useState<Record<string, boolean>>({});
+
+  const fetchAdminTickets = async () => {
+    setIsLoadingAdminTickets(true);
+    try {
+      const res = await fetch("/api/discord/tickets");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.tickets)) {
+          setAdminTickets(data.tickets);
+        }
+      }
+    } catch {} finally {
+      setIsLoadingAdminTickets(false);
+    }
+  };
+
+  const handleCloseTicket = async (channelId: string) => {
+    if (!confirm("Opravdu chcete uzavřít a smazat tento ticket kanál na Discordu?")) return;
+    try {
+      const res = await fetch("/api/discord/tickets/close", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelId,
+          closedBy: discordUser?.username || "Admin",
+        }),
+      });
+      if (res.ok) {
+        setTicketActionMsg({ text: "Ticket byl úspěšně uzavřen a smazán z Discordu." });
+        setAdminTickets((prev) => prev.filter((t) => t.id !== channelId));
+      }
+    } catch {
+      setTicketActionMsg({ text: "Chyba při uzavírání ticketu.", isError: true });
+    }
+  };
+
+  const handleSendTicketReply = async (channelId: string) => {
+    const text = replyMessageText[channelId]?.trim();
+    if (!text) return;
+    setIsSendingTicketReply((prev) => ({ ...prev, [channelId]: true }));
+    try {
+      const res = await fetch("/api/discord/tickets/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channelId,
+          text,
+          sender: discordUser?.username || "Admin",
+        }),
+      });
+      if (res.ok) {
+        setTicketActionMsg({ id: channelId, text: "Zpráva byla úspěšně odeslána do Discord ticketu!" });
+        setReplyMessageText((prev) => ({ ...prev, [channelId]: "" }));
+      }
+    } catch {
+      setTicketActionMsg({ id: channelId, text: "Chyba při odesílání zprávy.", isError: true });
+    } finally {
+      setIsSendingTicketReply((prev) => ({ ...prev, [channelId]: false }));
+    }
+  };
   const [discordTestResult, setDiscordTestResult] = useState<{
     success: boolean;
     message: string;
@@ -307,6 +377,13 @@ export default function AdminDashboardPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch live Discord tickets when Discord tab is active
+  useEffect(() => {
+    if (activeTab === "discord") {
+      fetchAdminTickets();
+    }
+  }, [activeTab]);
 
   const [categorySavedMsg, setCategorySavedMsg] = useState("Stav byl aktualizován.");
 
@@ -903,7 +980,12 @@ export default function AdminDashboardPage() {
             }`}
           >
             <DiscordIcon className="h-4 w-4 shrink-0" />
-            <span>Discord Webhook</span>
+            <span>Discord & Tickety</span>
+            {adminTickets.length > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-[#5865F2] text-white">
+                {adminTickets.length}
+              </span>
+            )}
             {discordInfo?.configured ? (
               <span className="w-2 h-2 rounded-full bg-emerald-500" title="Webhook aktivní" />
             ) : (
@@ -1889,7 +1971,7 @@ export default function AdminDashboardPage() {
                     VIP Customer
                   </h4>
                   <p className="text-[11px] text-neutral-500 leading-relaxed">
-                    Zlatý odznak na webu, přednostní vstup do obchodu přes odpočet a exkluzivní dropy.
+                    Zlatý odznak na webu, VIP podpora v Discord ticketech a exkluzivní dropy.
                   </p>
                   <span className="inline-block text-[10px] font-mono text-neutral-400">
                     ID: 1567522107393581176
@@ -1914,6 +1996,191 @@ export default function AdminDashboardPage() {
                   </span>
                 </div>
               </div>
+            </div>
+            {/* Live Discord Tickets Management Card */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#5865F2] text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <MessageSquare className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                      <span>Aktivní Zákaznické Tickety na Discordu</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-[#5865F2]/10 text-[#5865F2] border border-[#5865F2]/20">
+                        {adminTickets.length} {adminTickets.length === 1 ? "ticket" : adminTickets.length >= 2 && adminTickets.length <= 4 ? "tickety" : "ticketů"}
+                      </span>
+                    </h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Živé propojení ticketů ze serveru CzechBuy Fam. Můžete přímo odpovídat zákazníkům nebo kanály uzavírat.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={fetchAdminTickets}
+                    disabled={isLoadingAdminTickets}
+                    className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${isLoadingAdminTickets ? "animate-spin" : ""}`} />
+                    <span>{isLoadingAdminTickets ? "Aktualizuji..." : "Obnovit tickety"}</span>
+                  </button>
+                  <a
+                    href="https://discord.com/channels/1567519231984271472"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-lg bg-[#5865F2] text-white text-xs font-bold shadow-xs hover:bg-[#4752C4] transition"
+                  >
+                    <span>Discord Server</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+
+              {ticketActionMsg && (
+                <div
+                  className={`p-3.5 rounded-xl text-xs flex items-center justify-between gap-2 animate-in fade-in ${
+                    ticketActionMsg.isError
+                      ? "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                      : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {ticketActionMsg.isError ? (
+                      <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
+                    ) : (
+                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                    )}
+                    <span>{ticketActionMsg.text}</span>
+                  </div>
+                  <button
+                    onClick={() => setTicketActionMsg(null)}
+                    className="text-xs font-bold underline opacity-80 hover:opacity-100"
+                  >
+                    Zavřít
+                  </button>
+                </div>
+              )}
+
+              {adminTickets.length > 0 ? (
+                <div className="space-y-4">
+                  {adminTickets.map((t) => {
+                    const isVipTicket = t.name.startsWith("vip-");
+                    const isOwnerTicket = t.name.startsWith("owner-");
+
+                    return (
+                      <div
+                        key={t.id}
+                        className={`p-4 rounded-xl border transition space-y-3 ${
+                          isOwnerTicket
+                            ? "bg-rose-500/5 border-rose-500/30"
+                            : isVipTicket
+                            ? "bg-amber-500/5 border-amber-500/30"
+                            : "bg-neutral-50 dark:bg-neutral-950/60 border-neutral-200 dark:border-neutral-800"
+                        }`}
+                      >
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span className="font-bold text-sm text-neutral-900 dark:text-white font-mono">
+                              #{t.name}
+                            </span>
+                            {isOwnerTicket ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center gap-1">
+                                <Crown className="h-3 w-3" />
+                                <span>Owner Ticket</span>
+                              </span>
+                            ) : isVipTicket ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center gap-1">
+                                <Crown className="h-3 w-3" />
+                                <span>VIP Priorita</span>
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                Ticket
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                            <a
+                              href={t.discordUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 py-1.5 px-3 rounded-lg bg-[#5865F2]/10 hover:bg-[#5865F2] text-[#5865F2] hover:text-white transition text-xs font-bold"
+                            >
+                              <span>Přejít do kanálu</span>
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleCloseTicket(t.id)}
+                              className="inline-flex items-center gap-1 py-1.5 px-3 rounded-lg bg-rose-500/10 hover:bg-rose-600 text-rose-600 hover:text-white transition text-xs font-bold border border-rose-500/20"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              <span>Uzavřít & Smazat</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {t.topic && (
+                          <p className="text-xs text-neutral-600 dark:text-neutral-400 bg-white/60 dark:bg-neutral-900/60 p-2.5 rounded-lg border border-neutral-200/50 dark:border-neutral-800/50">
+                            <strong>Téma / Zákazník:</strong> {t.topic}
+                          </p>
+                        )}
+
+                        {/* Inline Admin Reply into Discord Ticket */}
+                        <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+                          <input
+                            type="text"
+                            value={replyMessageText[t.id] || ""}
+                            onChange={(e) =>
+                              setReplyMessageText((prev) => ({
+                                ...prev,
+                                [t.id]: e.target.value,
+                              }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleSendTicketReply(t.id);
+                              }
+                            }}
+                            placeholder="Napsat rychlou odpověď přímo do tohoto ticketu na Discordu..."
+                            className="flex-1 w-full text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#5865F2]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSendTicketReply(t.id)}
+                            disabled={
+                              isSendingTicketReply[t.id] ||
+                              !(replyMessageText[t.id]?.trim())
+                            }
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-lg bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs font-bold hover:opacity-90 transition disabled:opacity-40 shrink-0"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            <span>
+                              {isSendingTicketReply[t.id] ? "Odesílám..." : "Odeslat"}
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-8 text-center rounded-xl bg-neutral-50 dark:bg-neutral-950/40 border border-dashed border-neutral-200 dark:border-neutral-800 space-y-2">
+                  <MessageSquare className="h-8 w-8 text-neutral-400 mx-auto" />
+                  <p className="text-sm font-bold text-neutral-800 dark:text-neutral-200">
+                    Aktuálně nejsou otevřené žádné zákaznické tickety
+                  </p>
+                  <p className="text-xs text-neutral-500 max-w-md mx-auto">
+                    Jakmile zákazník vytvoří ticket na webu nebo klikne na tlačítko v Discordu, kanál se automaticky propojí a zobrazí zde.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-4 text-xs">
               <h3 className="font-bold text-sm text-neutral-900 dark:text-white">

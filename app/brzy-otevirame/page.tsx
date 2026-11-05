@@ -276,20 +276,27 @@ export default function ComingSoonCountdownPage() {
               Stanovený termín zahájení: <strong>21. listopadu 2026 ve 20:00 SEČ</strong>
             </p>
 
-            {/* Prominent VIP Discord Login Action */}
+            {/* Prominent Discord Action */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               {mounted && isDiscordLoggedIn && discordUser ? (
-                discordUser.isVip ? (
+                discordUser.isOwner || discordUser.isAdmin ? (
                   <Link
-                    href="/parfemy"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs uppercase tracking-wider shadow-md hover:opacity-90 transition active:scale-[0.98]"
+                    href="/interni-portal-8f2a9x/sprava"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-rose-600 text-white font-bold text-xs uppercase tracking-wider shadow-md hover:bg-rose-700 transition active:scale-[0.98]"
                   >
-                    <span>Vstoupit do obchodu (VIP Přístup)</span>
+                    <span>Vstoupit do administrace (Owner)</span>
                     <ArrowRight className="h-4 w-4" />
                   </Link>
+                ) : discordUser.isVip ? (
+                  <div className="flex flex-col sm:flex-row items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    <span>👑 Přihlášen jako <strong>@{discordUser.username}</strong> (VIP Zákazník). VIP výhody se aktivují při spuštění!</span>
+                    <Link href="/prihlaseni" className="text-amber-500 font-bold hover:underline ml-1">
+                      Můj profil →
+                    </Link>
+                  </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
-                    <span>Přihlášen jako <strong>@{discordUser.username}</strong> (bez VIP role)</span>
+                    <span>Přihlášen jako <strong>@{discordUser.username}</strong></span>
                     <Link href="/prihlaseni" className="text-[#5865F2] font-semibold hover:underline">
                       Zkontrolovat profil →
                     </Link>
@@ -302,7 +309,6 @@ export default function ComingSoonCountdownPage() {
                 >
                   <DiscordIcon className="h-4 w-4" />
                   <span>Přihlásit se přes Discord</span>
-                  <span className="text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full ml-1">VIP</span>
                 </Link>
               )}
             </div>
@@ -365,29 +371,29 @@ export default function ComingSoonCountdownPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-950 dark:text-white">
-                        VIP Přednostní přístup pro CzechBuy Fam
+                        VIP Výhody pro CzechBuy Fam
                       </h4>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#5865F2] text-white font-bold">
-                        Early Access
+                        Discord VIP
                       </span>
                     </div>
                     <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
                       {mounted && isDiscordLoggedIn && discordUser
                         ? discordUser.isVip
-                          ? `Jsi přihlášen jako @${discordUser.username} s aktivní VIP rolí. Máš přednostní přístup.`
-                          : `Jsi přihlášen jako @${discordUser.username}. Pro přednostní vstup před otevřením je potřeba mít VIP roli na Discordu.`
-                        : "Přihlas se svým Discord účtem. Pokud máš na serveru VIP roli, odemkne se ti přednostní vstup."}
+                          ? `Jsi přihlášen jako @${discordUser.username} s aktivní VIP rolí. Získáš automatické slevy a prioritní podporu.`
+                          : `Jsi přihlášen jako @${discordUser.username}. Pro VIP výhody a prioritní tickety měj VIP roli na Discordu.`
+                        : "Přihlas se svým Discord účtem. Členové s VIP rolí získají speciální ceny a prioritní tickety."}
                     </p>
                   </div>
                 </div>
 
                 {mounted && isDiscordLoggedIn ? (
-                  discordUser?.isVip ? (
+                  discordUser?.isOwner || discordUser?.isAdmin ? (
                     <Link
-                      href="/parfemy"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs shadow-md hover:opacity-90 transition shrink-0"
+                      href="/interni-portal-8f2a9x/sprava"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-md hover:bg-rose-700 transition shrink-0"
                     >
-                      <span>Vstoupit do obchodu</span>
+                      <span>Administrace</span>
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   ) : (
@@ -404,7 +410,7 @@ export default function ComingSoonCountdownPage() {
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs shadow-md hover:shadow-lg transition shrink-0"
                   >
                     <DiscordIcon className="h-3.5 w-3.5" />
-                    <span>Přihlásit přes Discord</span>
+                    <span>Přihlásit se přes Discord</span>
                   </Link>
                 )}
               </div>
