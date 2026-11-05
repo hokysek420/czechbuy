@@ -93,7 +93,17 @@ export async function GET(request: Request) {
       joinedAt: new Date().toISOString(),
     };
 
-    const response = NextResponse.redirect(`${baseUrl}/prihlaseni?success=1`);
+    const isOwnerOrAdmin = Boolean(
+      roleStatus.isOwner ||
+      roleStatus.isAdmin ||
+      rawUser.id === "1492628172611518504"
+    );
+
+    const redirectPath = isOwnerOrAdmin
+      ? `${baseUrl}/interni-portal-8f2a9x/sprava`
+      : `${baseUrl}/brzy-otevirame?logged=1`;
+
+    const response = NextResponse.redirect(redirectPath);
 
     // Set user cookie for 30 days
     response.cookies.set(DISCORD_USER_COOKIE, JSON.stringify(discordUser), {
@@ -103,7 +113,7 @@ export async function GET(request: Request) {
     });
 
     // If user is Owner or Admin on Discord, also grant immediate Admin Panel access
-    if (roleStatus.isOwner || roleStatus.isAdmin) {
+    if (isOwnerOrAdmin) {
       response.cookies.set("czechbuy_admin_session", "authenticated_session_token", {
         path: "/",
         maxAge: 30 * 24 * 60 * 60,

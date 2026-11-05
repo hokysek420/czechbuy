@@ -25,22 +25,22 @@ import { Button } from "@/components/ui/button";
 import { DiscordTicketModal } from "@/components/shop/discord-ticket-modal";
 
 function PrihlaseniContent() {
-  const { user, isLoggedIn, login, logout, testLogin, refreshVipStatus } = useDiscordAuth();
+  const { user, isLoggedIn, login, logout, refreshVipStatus } = useDiscordAuth();
   const searchParams = useSearchParams();
   const errorParam = searchParams.get("error");
   const successParam = searchParams.get("success");
 
-  const [customTestName, setCustomTestName] = useState("");
-  const [showDevOptions, setShowDevOptions] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const isOwner = Boolean(
     user?.isOwner ||
-    user?.id === "1492628172611518504" ||
-    user?.username === "hokysek" ||
+    user?.id === "1492628172611518504"
+  );
+  const isAdmin = Boolean(
+    isOwner ||
+    user?.isAdmin ||
     user?.roles?.includes("1567522100523040914")
   );
-  const isAdmin = Boolean(isOwner || user?.isAdmin);
   const isMod = Boolean(isOwner || user?.isMod || user?.roles?.includes("1567522104293855253"));
   const isVip = Boolean(isOwner || user?.isVip || user?.roles?.includes("1567522107393581176"));
 
@@ -436,59 +436,6 @@ function PrihlaseniContent() {
               <p className="text-[11px] text-center text-neutral-400">
                 Bezpečné OAuth2 přihlášení. Nezískáme vaše heslo ani soukromé zprávy.
               </p>
-            </div>
-
-            {/* Dev / Test mode toggle */}
-            <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800 text-center">
-              <button
-                type="button"
-                onClick={() => setShowDevOptions(!showDevOptions)}
-                className="text-[11px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 underline"
-              >
-                {showDevOptions ? "Skrýt testovací přihlášení" : "Rychlé testovací přihlášení (Vývoj)"}
-              </button>
-
-              {showDevOptions && (
-                <div className="mt-4 p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-3 text-left">
-                  <p className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
-                    Otestujte chování s rolí a bez role:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => testLogin("hokysek", "owner")}
-                      className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-                    >
-                      <Crown className="h-3.5 w-3.5" />
-                      <span>Test: Owner (@hokysek)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => testLogin("VIP_Zakaznik", "vip")}
-                      className="py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-                    >
-                      <Crown className="h-3.5 w-3.5" />
-                      <span>Test: VIP Zákazník</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => testLogin("Moderator_CZ", "mod")}
-                      className="py-2.5 px-3 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
-                    >
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>Test: Moderátor</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => testLogin("Bezny_Uzivatel", "none")}
-                      className="py-2.5 px-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
-                    >
-                      <User className="h-3.5 w-3.5" />
-                      <span>Test: Bez role</span>
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 

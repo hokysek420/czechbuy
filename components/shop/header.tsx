@@ -20,11 +20,13 @@ export function Header() {
 
   const isOwner = Boolean(
     user?.isOwner ||
-    user?.id === "1492628172611518504" ||
-    user?.username === "hokysek" ||
+    user?.id === "1492628172611518504"
+  );
+  const isAdmin = Boolean(
+    isOwner ||
+    user?.isAdmin ||
     user?.roles?.includes("1567522100523040914")
   );
-  const isAdmin = Boolean(isOwner || user?.isAdmin);
   const isMod = Boolean(isOwner || user?.isMod || user?.roles?.includes("1567522104293855253"));
   const isVip = Boolean(isOwner || user?.isVip || user?.roles?.includes("1567522107393581176"));
 

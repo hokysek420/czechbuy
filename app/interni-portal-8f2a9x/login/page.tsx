@@ -23,7 +23,6 @@ export default function AdminLoginPage() {
     (user.isOwner ||
      user.isAdmin ||
      user.id === "1492628172611518504" ||
-     user.username === "hokysek" ||
      user.roles?.includes("1567522100523040914"))
   );
 

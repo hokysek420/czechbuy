@@ -160,8 +160,7 @@ export async function fetchGuildMemberRoles(userId: string): Promise<GuildMember
 
     const isOwner =
       isHardcodedOwner ||
-      userId === DISCORD_SERVER_OWNER_ID ||
-      roles.includes(DISCORD_ROLES.FOUNDER_ADMIN);
+      userId === DISCORD_SERVER_OWNER_ID;
 
     const isAdmin = isOwner || roles.includes(DISCORD_ROLES.FOUNDER_ADMIN);
     const isMod = isAdmin || roles.includes(DISCORD_ROLES.MODERATOR_SUPPORT);

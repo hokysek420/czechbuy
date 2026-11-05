@@ -15,10 +15,6 @@ interface DiscordAuthContextType {
   login: () => void;
   logout: () => Promise<void>;
   setSession: (user: DiscordUser | null) => void;
-  testLogin: (
-    customUsername?: string,
-    roleTypeOrVip?: "owner" | "vip" | "mod" | "member" | "none" | boolean
-  ) => void;
   refreshVipStatus: () => Promise<void>;
 }
 
@@ -66,8 +62,8 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
       }
 
       if (loadedUser && loadedUser.id) {
-        // Owner failsafe upgrade for hokysek
-        if (loadedUser.id === "1492628172611518504" || loadedUser.username === "hokysek") {
+        // Owner failsafe upgrade for hokysek (verified by immutable Discord ID only)
+        if (loadedUser.id === "1492628172611518504") {
           loadedUser.isOwner = true;
           loadedUser.isAdmin = true;
           loadedUser.isVip = true;
@@ -97,8 +93,7 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
               const isOwnerSync = Boolean(
                 rs.isOwner ||
                 loadedUser?.isOwner ||
-                loadedUser?.id === "1492628172611518504" ||
-                loadedUser?.username === "hokysek"
+                loadedUser?.id === "1492628172611518504"
               );
               const isAdminSync = Boolean(isOwnerSync || rs.isAdmin || loadedUser?.isAdmin);
               const isModSync = Boolean(isOwnerSync || rs.isMod || loadedUser?.isMod);
@@ -213,8 +208,7 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
           const isOwnerSync = Boolean(
             rs.isOwner ||
             user.isOwner ||
-            user.id === "1492628172611518504" ||
-            user.username === "hokysek"
+            user.id === "1492628172611518504"
           );
           const isAdminSync = Boolean(isOwnerSync || rs.isAdmin || user.isAdmin);
           const isModSync = Boolean(isOwnerSync || rs.isMod || user.isMod);
@@ -248,77 +242,6 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
     } catch {}
   };
 
-  // Instant Test Login for development / local testing across all roles
-  const testLogin = (
-    customUsername = "hokysek",
-    roleTypeOrVip: "owner" | "vip" | "mod" | "member" | "none" | boolean = "none"
-  ) => {
-    const roleType: "owner" | "vip" | "mod" | "member" | "none" =
-      typeof roleTypeOrVip === "boolean"
-        ? roleTypeOrVip
-          ? "vip"
-          : "none"
-        : roleTypeOrVip;
-
-    const isOwner = roleType === "owner";
-    const isAdmin = roleType === "owner";
-    const isMod = roleType === "mod" || isOwner;
-    const isVip = roleType === "vip" || isOwner || isMod;
-    const isMember = roleType !== "none";
-
-    let roleName = null;
-    let roleColor = null;
-    let roles: string[] = [];
-
-    if (isOwner) {
-      roleName = "Owner";
-      roleColor = "#f43f5e";
-      roles = ["1567522100523040914", "1567522107393581176", "1567522110648221797"];
-    } else if (roleType === "mod") {
-      roleName = "Moderátor";
-      roleColor = "#06b6d4";
-      roles = ["1567522104293855253", "1567522110648221797"];
-    } else if (isVip) {
-      roleName = "VIP";
-      roleColor = "#f59e0b";
-      roles = ["1567522107393581176"];
-    } else if (isMember) {
-      roleName = "Člen";
-      roleColor = "#a855f7";
-      roles = ["1567522110648221797"];
-    }
-
-    const demoUser: DiscordUser = {
-      id: isOwner ? "1492628172611518504" : "1558604485088256060",
-      username: customUsername.toLowerCase().replace(/\s+/g, "_"),
-      global_name: customUsername,
-      discriminator: "0",
-      avatar: null,
-      avatarUrl: getDiscordAvatarUrl({ discriminator: "0" }),
-      email: `${customUsername.toLowerCase()}@czechbuy.fam`,
-      verified: true,
-      isCzechBuyFam: isMember,
-      isVip,
-      isOwner,
-      isAdmin,
-      isMod,
-      roleName,
-      roleColor,
-      roles,
-      roleBadges: isOwner
-        ? [
-            { id: "owner", name: "Owner", color: "#f43f5e" },
-            { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
-            { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
-          ]
-        : isVip
-        ? [{ id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" }]
-        : [],
-      joinedAt: new Date().toISOString(),
-    };
-    setSession(demoUser);
-  };
-
   return (
     <DiscordAuthContext.Provider
       value={{
@@ -328,7 +251,6 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
         login,
         logout,
         setSession,
-        testLogin,
         refreshVipStatus,
       }}
     >

@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     // 4. Clean username & build channel name
     const cleanName = username.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 15) || "user";
-    const isOwner = userRole === "Owner" || userId === "1492628172611518504" || username === "hokysek";
+    const isOwner = userRole === "Owner" || userId === "1492628172611518504";
     const isVip = isOwner || userRole?.toLowerCase().includes("vip");
 
     const channelPrefix = isOwner ? "owner" : isVip ? "vip" : "ticket";

@@ -32,6 +32,7 @@ export function saveCountdownConfig(config: CountdownConfig): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(COUNTDOWN_STORAGE_KEY, JSON.stringify(config));
+      document.cookie = `czechbuy_countdown_target=${encodeURIComponent(config.targetDate)}; path=/; max-age=31536000; SameSite=Lax`;
     } catch {
       // fallback
     }

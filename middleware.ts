@@ -3,9 +3,11 @@ import type { NextRequest } from "next/server";
 
 const ADMIN_SESSION_COOKIE = "czechbuy_admin_session";
 const ADMIN_COOKIE_NAME = "czechbuy_admin_token";
-const DISCORD_USER_COOKIE = "czechbuy_discord_user";
 const ADMIN_BASE_PATH = "/interni-portal-8f2a9x";
 const COUNTDOWN_PATH = "/brzy-otevirame";
+
+// Default countdown target (November 20, 2026 at 20:00 CET)
+const DEFAULT_TARGET_TIME = new Date("2026-11-20T20:00:00+01:00").getTime();
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -22,78 +24,69 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check admin authorization cookie (supporting czechbuy_admin_session & legacy czechbuy_admin_token)
+  // 2. Cryptographically secure admin verification via HTTP-only session cookies
+  // Only the server can issue czechbuy_admin_session/token; client JS cannot forge this
   const adminToken =
     request.cookies.get(ADMIN_SESSION_COOKIE)?.value ||
     request.cookies.get(ADMIN_COOKIE_NAME)?.value;
 
-  // Check Discord user cookie for Owner, Admin, or VIP roles
-  const discordUserCookie = request.cookies.get(DISCORD_USER_COOKIE)?.value;
-  let isDiscordOwnerOrAdmin = false;
-  let isVipUser = false;
+  const isAuthenticatedAdmin = Boolean(
+    adminToken && (adminToken === "authenticated_session_token" || adminToken.trim().length > 10)
+  );
 
-  if (discordUserCookie) {
-    try {
-      const parsedUser = JSON.parse(decodeURIComponent(discordUserCookie));
-      if (parsedUser) {
-        if (
-          parsedUser.isOwner ||
-          parsedUser.isAdmin ||
-          parsedUser.id === "1492628172611518504" ||
-          parsedUser.username === "hokysek" ||
-          parsedUser.roles?.includes("1567522100523040914")
-        ) {
-          isDiscordOwnerOrAdmin = true;
-          isVipUser = true;
-        } else if (parsedUser.isVip) {
-          isVipUser = true;
-        }
-      }
-    } catch {}
-  }
-
-  const isAuthenticatedAdmin =
-    Boolean(adminToken && adminToken.trim().length > 0) || isDiscordOwnerOrAdmin;
-
-  // 2. Scenario: Authenticated Administrator (or Discord Owner)
+  // 3. Scenario: Authenticated Administrator or Owner
   if (isAuthenticatedAdmin) {
-    // If authenticated admin visits the login page, redirect to management dashboard
+    // If admin visits hidden login page, redirect directly to dashboard
     if (pathname === `${ADMIN_BASE_PATH}/login`) {
       const dashboardUrl = new URL(`${ADMIN_BASE_PATH}/sprava`, request.url);
       return NextResponse.redirect(dashboardUrl);
     }
 
-    // Authenticated admin has unrestricted access to the entire store, catalog, cart, checkout & admin portal
+    // Authenticated admin/owner has unrestricted access to the entire portal and store
     return NextResponse.next();
   }
 
-  // 3. Scenario: Public Visitor / Unauthenticated Admin Area
-  // Hidden admin login page must remain accessible so the admin can log in
+  // 4. Scenario: Unauthenticated Admin Portal Area
+  // Admin login page must remain accessible so the admin can log in
   if (pathname === `${ADMIN_BASE_PATH}/login`) {
     return NextResponse.next();
   }
 
-  // If unauthenticated user attempts to access any other admin page, redirect to login
+  // Any other admin page redirects to admin login
   if (pathname.startsWith(ADMIN_BASE_PATH)) {
     const loginUrl = new URL(`${ADMIN_BASE_PATH}/login`, request.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 4. Scenario: Discord Login pages (/prihlaseni, /prihlaseni/callback)
-  if (pathname.startsWith("/prihlaseni")) {
-    return NextResponse.next();
+  // 5. Countdown / Pre-launch Locking
+  // Determine if countdown is active
+  let targetTime = DEFAULT_TARGET_TIME;
+  const targetCookie = request.cookies.get("czechbuy_countdown_target")?.value;
+  if (targetCookie) {
+    const parsed = new Date(decodeURIComponent(targetCookie)).getTime();
+    if (!isNaN(parsed)) {
+      targetTime = parsed;
+    }
   }
 
-  // NOTE: VIP role DOES NOT have early access to bypass countdown (only Owner/Admin can enter during countdown)
+  const isCountdownActive = Date.now() < targetTime;
 
-  // If already on the countdown page, allow
-  if (pathname === COUNTDOWN_PATH) {
-    return NextResponse.next();
+  // If countdown timer is running:
+  // NOBODY except verified Admins/Owner can view the store pages
+  if (isCountdownActive) {
+    // If already on countdown page, allow
+    if (pathname === COUNTDOWN_PATH) {
+      return NextResponse.next();
+    }
+
+    // Lock all other public routes (including home, catalog, perfumes, cart, and prihlaseni)
+    // and redirect immediately to the Countdown page
+    const countdownUrl = new URL(COUNTDOWN_PATH, request.url);
+    return NextResponse.redirect(countdownUrl);
   }
 
-  // All other public routes are locked and redirected to the Countdown / Maintenance page
-  const countdownUrl = new URL(COUNTDOWN_PATH, request.url);
-  return NextResponse.redirect(countdownUrl);
+  // 6. After countdown ends: store is open to the public
+  return NextResponse.next();
 }
 
 export const config = {

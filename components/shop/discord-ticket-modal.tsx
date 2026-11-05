@@ -34,7 +34,6 @@ export function DiscordTicketModal({
   const isOwner = Boolean(
     user?.isOwner ||
     user?.id === "1492628172611518504" ||
-    user?.username === "hokysek" ||
     user?.roles?.includes("1567522100523040914")
   );
   const isVip = Boolean(isOwner || user?.isVip || user?.roles?.includes("1567522107393581176"));

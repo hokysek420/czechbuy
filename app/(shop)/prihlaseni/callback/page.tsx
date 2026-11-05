@@ -60,9 +60,7 @@ export default function DiscordAuthCallbackPage() {
         const rawUser = await userRes.json();
 
         // 2. Fetch Guild Member & all server roles status from server API
-        const isHardcodedOwner =
-          rawUser.id === "1492628172611518504" ||
-          rawUser.username === "hokysek";
+        const isHardcodedOwner = rawUser.id === "1492628172611518504";
 
         let isMember = isHardcodedOwner;
         let isOwner = isHardcodedOwner;
@@ -144,7 +142,11 @@ export default function DiscordAuthCallbackPage() {
         setStatus("success");
 
         setTimeout(() => {
-          router.push("/prihlaseni?success=1");
+          if (isOwner || isAdmin) {
+            router.push("/interni-portal-8f2a9x/sprava");
+          } else {
+            router.push("/brzy-otevirame?logged=1");
+          }
         }, 1200);
       } catch (err: any) {
         setStatus("error");

@@ -40,7 +40,19 @@ export default function ComingSoonCountdownPage() {
     isComplete: false,
   });
   const [mounted, setMounted] = useState(false);
-  const { user: discordUser, isLoggedIn: isDiscordLoggedIn } = useDiscordAuth();
+  const { user: discordUser, isLoggedIn: isDiscordLoggedIn, logout } = useDiscordAuth();
+
+  const isOwner = Boolean(
+    discordUser?.isOwner ||
+    discordUser?.id === "1492628172611518504"
+  );
+  const isAdmin = Boolean(
+    isOwner ||
+    discordUser?.isAdmin ||
+    discordUser?.roles?.includes("1567522100523040914")
+  );
+  const isMod = Boolean(isOwner || isAdmin || discordUser?.isMod || discordUser?.roles?.includes("1567522104293855253"));
+  const isVip = Boolean(isOwner || isAdmin || discordUser?.isVip || discordUser?.roles?.includes("1567522107393581176"));
 
   // Newsletter state
   const [email, setEmail] = useState("");
@@ -132,10 +144,9 @@ export default function ComingSoonCountdownPage() {
           <div className="flex items-center gap-3">
             {mounted && isDiscordLoggedIn && discordUser ? (
               <div className="flex items-center gap-2">
-                <Link
-                  href="/prihlaseni"
-                  className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 hover:border-neutral-700 transition shadow-sm group"
-                  title={`Přihlášen jako ${discordUser.username} (${discordUser.isVip ? "VIP" : "Bez role"})`}
+                <div
+                  className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 transition shadow-sm"
+                  title={`Přihlášen jako ${discordUser.username} (${isOwner ? "Owner" : isAdmin ? "Admin" : isMod ? "Moderátor" : isVip ? "VIP" : discordUser.roleName || "Bez role"})`}
                 >
                   <div className="relative shrink-0">
                     <img
@@ -151,24 +162,32 @@ export default function ComingSoonCountdownPage() {
                     </span>
                     <span
                       className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
-                        discordUser.isOwner
+                        isOwner
                           ? "text-rose-400 font-bold"
-                          : discordUser.isAdmin
+                          : isAdmin
                           ? "text-indigo-400 font-bold"
-                          : discordUser.isMod
+                          : isMod
                           ? "text-cyan-400 font-semibold"
-                          : discordUser.isVip
+                          : isVip
                           ? "text-amber-400 font-semibold"
                           : discordUser.roleName
                           ? "text-purple-400 font-medium"
                           : "text-neutral-400 font-normal"
                       }`}
                     >
-                      {discordUser.roleName || (discordUser.isOwner ? "Owner" : discordUser.isVip ? "VIP" : "Bez role")}
+                      {isOwner
+                        ? "Owner"
+                        : isAdmin
+                        ? "Admin"
+                        : isMod
+                        ? "Moderátor"
+                        : isVip
+                        ? "VIP"
+                        : discordUser.roleName || "Bez role"}
                     </span>
                   </div>
-                </Link>
-                {(discordUser.isOwner || discordUser.isAdmin) && (
+                </div>
+                {(isOwner || isAdmin) && (
                   <Link
                     href="/interni-portal-8f2a9x/sprava"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition shadow-xs"
@@ -178,7 +197,7 @@ export default function ComingSoonCountdownPage() {
                     <span>Admin</span>
                   </Link>
                 )}
-                {(discordUser.isVip || discordUser.isOwner) && (
+                {(isOwner || isAdmin) && (
                   <Link
                     href="/parfemy"
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition"
@@ -187,15 +206,25 @@ export default function ComingSoonCountdownPage() {
                     <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 )}
+                {!isOwner && !isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => logout()}
+                    className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded-md transition"
+                    title="Odhlásit se z Discordu"
+                  >
+                    Odhlásit
+                  </button>
+                )}
               </div>
             ) : (
-              <Link
-                href="/prihlaseni"
+              <a
+                href="/api/auth/discord/login"
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-bold shadow-xs transition active:scale-95"
               >
                 <DiscordIcon className="h-3.5 w-3.5" />
                 <span>Discord Login</span>
-              </Link>
+              </a>
             )}
             <ThemeToggle />
           </div>
@@ -290,26 +319,34 @@ export default function ComingSoonCountdownPage() {
                 ) : discordUser.isVip ? (
                   <div className="flex flex-col sm:flex-row items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-600 dark:text-amber-400 font-medium">
                     <span>👑 Přihlášen jako <strong>@{discordUser.username}</strong> (VIP Zákazník). VIP výhody se aktivují při spuštění!</span>
-                    <Link href="/prihlaseni" className="text-amber-500 font-bold hover:underline ml-1">
-                      Můj profil →
-                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="text-neutral-400 hover:text-rose-500 font-bold hover:underline ml-2 text-[11px]"
+                    >
+                      Odhlásit
+                    </button>
                   </div>
                 ) : (
                   <div className="flex flex-col sm:flex-row items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
                     <span>Přihlášen jako <strong>@{discordUser.username}</strong></span>
-                    <Link href="/prihlaseni" className="text-[#5865F2] font-semibold hover:underline">
-                      Zkontrolovat profil →
-                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="text-neutral-400 hover:text-rose-500 font-bold hover:underline ml-2 text-[11px]"
+                    >
+                      Odhlásit
+                    </button>
                   </div>
                 )
               ) : (
-                <Link
-                  href="/prihlaseni"
+                <a
+                  href="/api/auth/discord/login"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
                 >
                   <DiscordIcon className="h-4 w-4" />
                   <span>Přihlásit se přes Discord</span>
-                </Link>
+                </a>
               )}
             </div>
           </div>
@@ -388,7 +425,7 @@ export default function ComingSoonCountdownPage() {
                 </div>
 
                 {mounted && isDiscordLoggedIn ? (
-                  discordUser?.isOwner || discordUser?.isAdmin ? (
+                  isOwner || isAdmin ? (
                     <Link
                       href="/interni-portal-8f2a9x/sprava"
                       className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-md hover:bg-rose-700 transition shrink-0"
@@ -397,21 +434,22 @@ export default function ComingSoonCountdownPage() {
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   ) : (
-                    <Link
-                      href="/prihlaseni"
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold text-xs transition shrink-0"
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 font-bold text-xs transition shrink-0"
                     >
-                      <span>Můj profil</span>
-                    </Link>
+                      <span>Odhlásit se</span>
+                    </button>
                   )
                 ) : (
-                  <Link
-                    href="/prihlaseni"
+                  <a
+                    href="/api/auth/discord/login"
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs shadow-md hover:shadow-lg transition shrink-0"
                   >
                     <DiscordIcon className="h-3.5 w-3.5" />
                     <span>Přihlásit se přes Discord</span>
-                  </Link>
+                  </a>
                 )}
               </div>
             </div>
