@@ -151,22 +151,29 @@ export function Header() {
             {isLoggedIn && user ? (
               <Link
                 href="/prihlaseni"
-                className="inline-flex items-center gap-2 py-1 px-2.5 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-[#5865F2] dark:hover:border-[#5865F2] transition text-xs text-neutral-800 dark:text-neutral-200 shadow-xs"
-                title={`Přihlášen jako ${user.global_name || user.username}`}
+                className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 hover:border-neutral-700 transition shadow-sm group"
+                title={`Přihlášen jako ${user.username} (${user.isVip ? "VIP" : "Bez role"})`}
               >
-                <img
-                  src={user.avatarUrl}
-                  alt={user.username}
-                  className="w-6 h-6 rounded-full object-cover border border-[#5865F2]"
-                />
-                <span className="hidden sm:inline font-semibold max-w-[85px] truncate text-[11px]">
-                  {user.global_name || user.username}
-                </span>
-                {user.isVip && (
-                  <span className="inline-flex items-center gap-0.5 text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold px-1.5 py-0.5 rounded-full border border-amber-500/30">
-                    VIP
+                <div className="relative shrink-0">
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.username}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-neutral-700"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#23a55a] border-2 border-neutral-900 dark:border-neutral-950" />
+                </div>
+                <div className="flex flex-col text-left leading-tight min-w-0 pr-0.5">
+                  <span className="font-bold text-xs sm:text-[13px] text-white max-w-[120px] truncate tracking-tight">
+                    {user.username || user.global_name}
                   </span>
-                )}
+                  <span
+                    className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
+                      user.isVip ? "text-amber-400" : "text-neutral-400"
+                    }`}
+                  >
+                    {user.isVip ? "VIP" : "Bez role"}
+                  </span>
+                </div>
               </Link>
             ) : (
               <Link
@@ -222,29 +229,29 @@ export function Header() {
               <Link
                 href="/prihlaseni"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-neutral-900 border border-neutral-800 text-white"
               >
-                <img
-                  src={user.avatarUrl}
-                  alt={user.username}
-                  className="w-10 h-10 rounded-xl object-cover border border-[#5865F2]"
-                />
+                <div className="relative shrink-0">
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.username}
+                    className="w-10 h-10 rounded-full object-cover border border-neutral-700"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#23a55a] border-2 border-neutral-900" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                      {user.global_name || user.username}
-                    </p>
-                    {user.isVip && (
-                      <span className="inline-flex items-center gap-0.5 text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold px-1.5 py-0.5 rounded-full border border-amber-500/30">
-                        VIP
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-neutral-400 font-mono">
-                    @{user.username}
+                  <p className="text-sm font-bold text-white truncate">
+                    {user.username || user.global_name}
+                  </p>
+                  <p
+                    className={`text-xs font-medium mt-0.5 ${
+                      user.isVip ? "text-amber-400" : "text-neutral-400"
+                    }`}
+                  >
+                    {user.isVip ? "VIP" : "Bez role"}
                   </p>
                 </div>
-                <span className="text-xs font-semibold text-[#5865F2]">Můj profil</span>
+                <span className="text-xs font-semibold text-neutral-400">Můj profil →</span>
               </Link>
             ) : (
               <Link

@@ -134,19 +134,29 @@ export default function ComingSoonCountdownPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/prihlaseni"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#5865F2]/10 hover:bg-[#5865F2]/20 border border-[#5865F2]/30 text-xs font-semibold text-[#5865F2] dark:text-[#7983F5] transition"
+                  className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 hover:border-neutral-700 transition shadow-sm group"
+                  title={`Přihlášen jako ${discordUser.username} (${discordUser.isVip ? "VIP" : "Bez role"})`}
                 >
-                  <img
-                    src={discordUser.avatarUrl}
-                    alt={discordUser.username}
-                    className="w-4 h-4 rounded-full"
-                  />
-                  <span className="hidden sm:inline">@{discordUser.username}</span>
-                  {discordUser.isVip && (
-                    <span className="text-[10px] bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-1.5 py-0.2 rounded-full font-bold">
-                      VIP
+                  <div className="relative shrink-0">
+                    <img
+                      src={discordUser.avatarUrl}
+                      alt={discordUser.username}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover border border-neutral-700"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#23a55a] border-2 border-neutral-900 dark:border-neutral-950" />
+                  </div>
+                  <div className="flex flex-col text-left leading-tight min-w-0 pr-0.5">
+                    <span className="font-bold text-xs sm:text-[13px] text-white max-w-[120px] truncate tracking-tight">
+                      {discordUser.username || discordUser.global_name}
                     </span>
-                  )}
+                    <span
+                      className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
+                        discordUser.isVip ? "text-amber-400" : "text-neutral-400"
+                      }`}
+                    >
+                      {discordUser.isVip ? "VIP" : "Bez role"}
+                    </span>
+                  </div>
                 </Link>
                 {discordUser.isVip && (
                   <Link

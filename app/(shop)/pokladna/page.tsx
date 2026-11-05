@@ -376,20 +376,27 @@ export default function CheckoutPage() {
               {isDiscordLoggedIn && discordUser ? (
                 <div className="mb-5 p-3.5 rounded-xl bg-gradient-to-r from-[#5865F2]/10 via-[#5865F2]/5 to-transparent border border-[#5865F2]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={discordUser.avatarUrl}
-                      alt={discordUser.username}
-                      className="w-9 h-9 rounded-full ring-2 ring-[#5865F2]/40"
-                    />
+                    <div className="relative shrink-0">
+                      <img
+                        src={discordUser.avatarUrl}
+                        alt={discordUser.username}
+                        className="w-9 h-9 rounded-full ring-2 ring-[#5865F2]/40"
+                      />
+                      <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#23a55a] border-2 border-white dark:border-neutral-900" />
+                    </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-neutral-900 dark:text-white">
-                          @{discordUser.username}
+                          {discordUser.username}
                         </span>
-                        {discordUser.isVip && (
+                        {discordUser.isVip ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-2 py-0.5 rounded-full">
                             <Crown className="h-2.5 w-2.5" />
                             VIP
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-neutral-400 font-medium">
+                            Bez role
                           </span>
                         )}
                       </div>

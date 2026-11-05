@@ -48,6 +48,7 @@ function PrihlaseniContent() {
                   alt={user.username}
                   className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#5865F2]/40 shadow-sm"
                 />
+                <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#23a55a] border-2 border-white dark:border-neutral-900" />
                 {user.isVip && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-neutral-950 font-bold text-[10px] shadow">
                     <Crown className="h-3 w-3" />
