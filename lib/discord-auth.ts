@@ -8,6 +8,15 @@ export const DISCORD_CLIENT_ID =
 export const DISCORD_GUILD_ID =
   process.env.DISCORD_GUILD_ID || "1567519231984271472";
 
+export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "";
+
+// Role IDs on CzechBuy Discord Server
+export const DISCORD_VIP_ROLE_ID =
+  process.env.DISCORD_VIP_ROLE_ID || "1567522107393581176"; // "VIP Customer"
+
+export const DISCORD_ADMIN_ROLE_ID =
+  process.env.DISCORD_ADMIN_ROLE_ID || "1567522100523040914"; // "Founder / Admin"
+
 export const DISCORD_USER_COOKIE = "czechbuy_discord_user";
 export const DISCORD_USER_STORAGE_KEY = "czechbuy_discord_user_v1";
 
@@ -50,6 +59,55 @@ export function getDiscordAvatarUrl(user: { id?: string; avatar?: string | null;
     ? Number(user.discriminator) % 5
     : 0;
   return `https://cdn.discordapp.com/embed/avatars/${index}.png`;
+}
+
+/**
+ * Fetches real-time VIP role status of a Discord member from the CzechBuy server.
+ * Only users who have the official VIP Customer (or Founder/Admin) role receive VIP on the site.
+ * Non-VIP members receive no role.
+ */
+export async function fetchGuildMemberVipStatus(userId: string): Promise<{
+  isMember: boolean;
+  isVip: boolean;
+  roleName: string | null;
+  roles: string[];
+}> {
+  if (!userId) {
+    return { isMember: false, isVip: false, roleName: null, roles: [] };
+  }
+
+  try {
+    const res = await fetch(
+      `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}/members/${userId}`,
+      {
+        headers: {
+          Authorization: `Bot ${DISCORD_BOT_TOKEN}`,
+        },
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return { isMember: false, isVip: false, roleName: null, roles: [] };
+    }
+
+    const member = await res.json();
+    const roles: string[] = Array.isArray(member.roles) ? member.roles : [];
+
+    const isVip =
+      roles.includes(DISCORD_VIP_ROLE_ID) ||
+      roles.includes(DISCORD_ADMIN_ROLE_ID);
+
+    return {
+      isMember: true,
+      isVip,
+      roleName: isVip ? "VIP" : null,
+      roles,
+    };
+  } catch (err) {
+    console.warn("[Discord Auth] Error fetching guild member:", err);
+    return { isMember: false, isVip: false, roleName: null, roles: [] };
+  }
 }
 
 /**

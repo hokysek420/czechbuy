@@ -15,7 +15,8 @@ interface DiscordAuthContextType {
   login: () => void;
   logout: () => Promise<void>;
   setSession: (user: DiscordUser | null) => void;
-  testLogin: (customUsername?: string) => void;
+  testLogin: (customUsername?: string, isVip?: boolean) => void;
+  refreshVipStatus: () => Promise<void>;
 }
 
 const DiscordAuthContext = createContext<DiscordAuthContextType | undefined>(undefined);
@@ -129,8 +130,28 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
     setSession(null);
   };
 
+  const refreshVipStatus = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/auth/discord/member-vip?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.vipStatus) {
+          const updated: DiscordUser = {
+            ...user,
+            isCzechBuyFam: Boolean(data.vipStatus.isMember),
+            isVip: Boolean(data.vipStatus.isVip),
+            roleName: data.vipStatus.roleName || null,
+            roles: data.vipStatus.roles || [],
+          };
+          setSession(updated);
+        }
+      }
+    } catch {}
+  };
+
   // Instant Test Login for development / local testing
-  const testLogin = (customUsername = "CzechBuyFam_VIP") => {
+  const testLogin = (customUsername = "CzechBuy_User", isVip = false) => {
     const demoUser: DiscordUser = {
       id: "1558604485088256060",
       username: customUsername.toLowerCase().replace(/\s+/g, "_"),
@@ -141,6 +162,9 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
       email: `${customUsername.toLowerCase()}@czechbuy.fam`,
       verified: true,
       isCzechBuyFam: true,
+      isVip,
+      roleName: isVip ? "VIP" : null,
+      roles: isVip ? ["1567522107393581176"] : [],
       joinedAt: new Date().toISOString(),
     };
     setSession(demoUser);
@@ -156,6 +180,7 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
         logout,
         setSession,
         testLogin,
+        refreshVipStatus,
       }}
     >
       {children}

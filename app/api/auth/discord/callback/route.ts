@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import {
   DISCORD_CLIENT_ID,
-  DISCORD_GUILD_ID,
   DISCORD_USER_COOKIE,
   getDiscordAvatarUrl,
   getBaseUrl,
+  fetchGuildMemberVipStatus,
 } from "@/lib/discord-auth";
 import { DiscordUser } from "@/types";
 
@@ -65,21 +65,8 @@ export async function GET(request: Request) {
 
     const rawUser = await userResponse.json();
 
-    // 3. Check if user is a member of CzechBuy Discord server
-    let isCzechBuyFam = false;
-    try {
-      const guildsResponse = await fetch("https://discord.com/api/users/@me/guilds", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      if (guildsResponse.ok) {
-        const guilds: Array<{ id: string }> = await guildsResponse.json();
-        isCzechBuyFam = guilds.some((g) => g.id === DISCORD_GUILD_ID);
-      }
-    } catch {
-      // ignore guild check failure
-    }
+    // 3. Check real-time Discord Guild Member & VIP role status
+    const vipStatus = await fetchGuildMemberVipStatus(rawUser.id);
 
     const discordUser: DiscordUser = {
       id: rawUser.id,
@@ -94,7 +81,10 @@ export async function GET(request: Request) {
       }),
       email: rawUser.email || null,
       verified: Boolean(rawUser.verified),
-      isCzechBuyFam,
+      isCzechBuyFam: vipStatus.isMember,
+      isVip: vipStatus.isVip,
+      roleName: vipStatus.roleName,
+      roles: vipStatus.roles,
       joinedAt: new Date().toISOString(),
     };
 

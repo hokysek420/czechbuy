@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDiscordAuth } from "@/lib/discord-auth-context";
-import { getDiscordAvatarUrl, DISCORD_GUILD_ID } from "@/lib/discord-auth";
+import { getDiscordAvatarUrl } from "@/lib/discord-auth";
 import { DiscordUser } from "@/types";
-import { Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 
 export default function DiscordAuthCallbackPage() {
@@ -46,7 +46,7 @@ export default function DiscordAuthCallbackPage() {
       }
 
       try {
-        // Fetch user from Discord API
+        // 1. Fetch user from Discord API
         const userRes = await fetch("https://discord.com/api/users/@me", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -59,19 +59,26 @@ export default function DiscordAuthCallbackPage() {
 
         const rawUser = await userRes.json();
 
-        // Check guild membership
-        let isCzechBuyFam = false;
+        // 2. Fetch VIP role status from server API
+        let isMember = false;
+        let isVip = false;
+        let roleName: string | null = null;
+        let roles: string[] = [];
+
         try {
-          const guildsRes = await fetch("https://discord.com/api/users/@me/guilds", {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          });
-          if (guildsRes.ok) {
-            const guilds: Array<{ id: string }> = await guildsRes.json();
-            isCzechBuyFam = guilds.some((g) => g.id === DISCORD_GUILD_ID);
+          const roleRes = await fetch(`/api/auth/discord/member-vip?userId=${rawUser.id}`);
+          if (roleRes.ok) {
+            const roleData = await roleRes.json();
+            if (roleData?.vipStatus) {
+              isMember = Boolean(roleData.vipStatus.isMember);
+              isVip = Boolean(roleData.vipStatus.isVip);
+              roleName = roleData.vipStatus.roleName || null;
+              roles = roleData.vipStatus.roles || [];
+            }
           }
-        } catch {}
+        } catch {
+          // fallback
+        }
 
         const discordUser: DiscordUser = {
           id: rawUser.id,
@@ -86,7 +93,10 @@ export default function DiscordAuthCallbackPage() {
           }),
           email: rawUser.email || null,
           verified: Boolean(rawUser.verified),
-          isCzechBuyFam,
+          isCzechBuyFam: isMember,
+          isVip,
+          roleName,
+          roles,
           joinedAt: new Date().toISOString(),
         };
 
@@ -119,7 +129,7 @@ export default function DiscordAuthCallbackPage() {
               <span>Ověřování přes Discord...</span>
             </h2>
             <p className="text-xs text-neutral-500">
-              Připojujeme váš účet a ověřujeme členství v CzechBuy Fam komunitě.
+              Připojujeme váš účet a ověřujeme VIP roli na serveru CzechBuy.
             </p>
           </div>
         )}

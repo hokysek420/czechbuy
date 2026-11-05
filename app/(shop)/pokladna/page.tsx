@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   ExternalLink,
   Sparkles,
+  Crown,
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
 import { useCart } from "@/lib/cart-context";
@@ -385,10 +386,10 @@ export default function CheckoutPage() {
                         <span className="text-xs font-bold text-neutral-900 dark:text-white">
                           @{discordUser.username}
                         </span>
-                        {discordUser.isCzechBuyFam && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-[#5865F2] text-white px-2 py-0.5 rounded-full">
-                            <Sparkles className="h-2.5 w-2.5" />
-                            CzechBuy Fam
+                        {discordUser.isVip && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-black bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-2 py-0.5 rounded-full">
+                            <Crown className="h-2.5 w-2.5" />
+                            VIP
                           </span>
                         )}
                       </div>

@@ -57,12 +57,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check Discord user authentication cookie
+  // 5. Scenario: Discord VIP early access check
   const discordUserCookie = request.cookies.get(DISCORD_USER_COOKIE)?.value;
-  const isAuthenticatedDiscordUser = Boolean(discordUserCookie && discordUserCookie.trim().length > 0);
+  let isVipUser = false;
+  if (discordUserCookie) {
+    try {
+      const parsedUser = JSON.parse(decodeURIComponent(discordUserCookie));
+      if (parsedUser && parsedUser.isVip) {
+        isVipUser = true;
+      }
+    } catch {}
+  }
 
-  // Authenticated Discord users get access to the store
-  if (isAuthenticatedDiscordUser) {
+  // Only users who hold the VIP role on Discord get early access to the store before official launch
+  if (isVipUser) {
     return NextResponse.next();
   }
 

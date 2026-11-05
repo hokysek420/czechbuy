@@ -1,86 +1,72 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
 import {
   Sparkles,
   ShieldCheck,
   Zap,
-  CheckCircle2,
-  LogOut,
   ArrowRight,
+  LogOut,
   UserCheck,
-  ShoppingBag,
-  ExternalLink,
+  RefreshCw,
+  Crown,
+  User,
 } from "lucide-react";
 import { DiscordIcon } from "@/components/ui/social-icons";
-import { useDiscordAuth } from "@/lib/discord-auth-context";
 import { Button } from "@/components/ui/button";
 
 function PrihlaseniContent() {
-  const { user, isLoggedIn, isLoading, login, logout, testLogin } = useDiscordAuth();
+  const { user, isLoggedIn, login, logout, testLogin, refreshVipStatus } = useDiscordAuth();
   const searchParams = useSearchParams();
-  const isSuccess = searchParams.get("success") === "1";
   const errorParam = searchParams.get("error");
-  const [customTesterName, setCustomTesterName] = useState("");
-  const [showTesterInput, setShowTesterInput] = useState(false);
+  const successParam = searchParams.get("success");
+
+  const [customTestName, setCustomTestName] = useState("");
+  const [showDevOptions, setShowDevOptions] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshVipStatus();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-      {/* Breadcrumb */}
-      <nav className="text-xs text-neutral-400 mb-8 flex items-center gap-1.5">
-        <Link href="/" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
-          Domů
-        </Link>
-        <span>/</span>
-        <span className="text-neutral-900 dark:text-neutral-100 font-medium">
-          Discord Přihlášení
-        </span>
-      </nav>
-
-      {/* Notification banner if just redirected */}
-      {isSuccess && (
-        <div className="mb-8 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-3 animate-in fade-in">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <div>
-            <strong className="block font-bold">Přihlášení proběhlo úspěšně!</strong>
-            <span>Váš Discord účet je nyní propojen s CzechBuy.</span>
-          </div>
-        </div>
-      )}
-
-      {errorParam && (
-        <div className="mb-8 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-3 animate-in fade-in">
-          <div className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-          <span>{decodeURIComponent(errorParam)}</span>
-        </div>
-      )}
-
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 animate-in fade-in duration-300">
+      {/* If logged in: User Profile Card */}
       {isLoggedIn && user ? (
-        /* LOGGED IN PROFILE CARD */
-        <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-8 sm:p-12 shadow-xl space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-neutral-100 dark:border-neutral-800">
-            <div className="flex items-center gap-5">
+        <div className="max-w-2xl mx-auto bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-10 shadow-lg space-y-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center gap-4">
               <div className="relative">
                 <img
                   src={user.avatarUrl}
-                  alt={user.global_name || user.username}
-                  className="w-20 h-20 rounded-2xl object-cover border-2 border-[#5865F2] shadow-md"
+                  alt={user.username}
+                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#5865F2]/40 shadow-sm"
                 />
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-[10px] text-white">
-                  ✓
-                </span>
+                {user.isVip && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-neutral-950 font-bold text-[10px] shadow">
+                    <Crown className="h-3 w-3" />
+                  </span>
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-black text-neutral-950 dark:text-white">
                     {user.global_name || user.username}
                   </h1>
-                  {user.isCzechBuyFam && (
-                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-bold uppercase tracking-wider">
-                      ⭐ CzechBuy Fam
+                  {user.isVip ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <Crown className="h-3 w-3" />
+                      <span>VIP Zákazník</span>
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-400 text-[10px] font-medium">
+                      Bez role
                     </span>
                   )}
                 </div>
@@ -116,20 +102,31 @@ function PrihlaseniContent() {
                 <span>Ověřený člen</span>
               </p>
               <p className="text-[11px] text-neutral-500 mt-1">
-                Aktivní Discord propojení
+                Discord účet propojen
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-200/80 dark:border-neutral-800">
               <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                CzechBuy Komunita
+                Discord Role
               </span>
               <p className="text-base font-extrabold text-neutral-900 dark:text-white mt-1 flex items-center gap-1.5">
-                <Sparkles className="h-4 w-4 text-purple-500" />
-                <span>{user.isCzechBuyFam ? "VIP Člen" : "Host"}</span>
+                {user.isVip ? (
+                  <>
+                    <Crown className="h-4 w-4 text-amber-500" />
+                    <span className="text-amber-500">VIP Zákazník</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="h-4 w-4 text-neutral-400" />
+                    <span className="text-neutral-500">Bez VIP role</span>
+                  </>
+                )}
               </p>
               <p className="text-[11px] text-neutral-500 mt-1">
-                {user.isCzechBuyFam ? "Přístup k privátním dropům" : "Připojte se na server pro VIP výhody"}
+                {user.isVip
+                  ? "Aktivní VIP výhody a přednostní přístup"
+                  : "Role VIP nebyla na Discordu nalezena"}
               </p>
             </div>
 
@@ -148,108 +145,106 @@ function PrihlaseniContent() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Link href="/katalog">
-              <Button size="lg" className="text-xs uppercase tracking-wider font-bold">
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                <span>Procházet katalog</span>
-              </Button>
-            </Link>
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white flex items-center gap-1.5 transition disabled:opacity-50"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>{isRefreshing ? "Ověřuji role..." : "Zkontrolovat VIP roli z Discordu"}</span>
+            </button>
 
-            <Link href="/pokladna">
-              <Button size="lg" variant="outline" className="text-xs uppercase tracking-wider font-semibold">
-                <span>Přejít do pokladny</span>
+            <Link href="/parfemy" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full font-bold text-xs uppercase tracking-wider">
+                <span>Přejít do nabídky</span>
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </Link>
-
-            <a
-              href={process.env.NEXT_PUBLIC_DISCORD_INVITE_URL || "https://discord.gg/czechbuy"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#5865F2]/10 hover:bg-[#5865F2]/20 text-[#5865F2] font-semibold text-xs tracking-wider uppercase transition ml-auto"
-            >
-              <DiscordIcon className="h-4 w-4" />
-              <span>Otevřít CzechBuy Discord</span>
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
           </div>
         </div>
       ) : (
-        /* LOGGED OUT STATE */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Login Card */}
-          <div className="lg:col-span-7 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-8 sm:p-12 shadow-xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] text-xs font-semibold tracking-wider uppercase">
-              <DiscordIcon className="h-3.5 w-3.5" />
-              <span>Oficiální přihlášení</span>
-            </div>
-
-            <div className="space-y-2">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-neutral-950 dark:text-white">
+        /* If unauthenticated: Login Screen */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+          {/* Main login card */}
+          <div className="lg:col-span-7 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-8 sm:p-12 shadow-xl space-y-8">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5865F2]/10 border border-[#5865F2]/20 text-[#5865F2] text-xs font-bold uppercase tracking-wider">
+                <DiscordIcon className="h-3.5 w-3.5" />
+                <span>Komunitní účet</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black text-neutral-950 dark:text-white tracking-tight">
                 Přihlášení přes Discord
               </h1>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                Přihlaste se jedním kliknutím pomocí svého Discord účtu. Žádná zdlouhavá hesla ani registrace.
+              <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                Přihlaste se svým Discord účtem. Pokud máte na našem serveru roli <strong>VIP Customer</strong>, získáte automaticky status VIP na webu i přednostní přístup k dropům.
               </p>
             </div>
 
-            {/* Big Discord Login Button */}
-            <div className="pt-2">
+            {errorParam && (
+              <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs">
+                <strong>Chyba při přihlašování:</strong> {errorParam}
+              </div>
+            )}
+
+            {successParam && (
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs">
+                Úspěšně jste se přihlásili přes Discord!
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <div className="space-y-4 pt-2">
               <button
                 type="button"
-                onClick={() => login()}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-sm tracking-wider uppercase transition-all shadow-lg shadow-[#5865F2]/25 active:scale-[0.99]"
+                onClick={login}
+                className="w-full py-4 px-6 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] active:scale-[0.99] text-white font-bold text-sm shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 group"
               >
-                <DiscordIcon className="h-5 w-5" />
+                <DiscordIcon className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 <span>Pokračovat přes Discord</span>
+                <ArrowRight className="h-4 w-4 opacity-80 group-hover:translate-x-1 transition-transform" />
               </button>
-              <p className="text-[11px] text-center text-neutral-400 mt-2">
-                Budete bezpečně přesměrováni na autorizační stránku Discordu.
+
+              <p className="text-[11px] text-center text-neutral-400">
+                Bezpečné OAuth2 přihlášení. Nezískáme vaše heslo ani soukromé zprávy.
               </p>
             </div>
 
-            {/* Quick Dev/Test Login Section */}
-            <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
-                  Rychlé testovací přihlášení (Dev preview)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowTesterInput(!showTesterInput)}
-                  className="text-[11px] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 underline"
-                >
-                  {showTesterInput ? "Zavřít" : "Vlastní jméno"}
-                </button>
-              </div>
+            {/* Dev / Test mode toggle */}
+            <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800 text-center">
+              <button
+                type="button"
+                onClick={() => setShowDevOptions(!showDevOptions)}
+                className="text-[11px] text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 underline"
+              >
+                {showDevOptions ? "Skrýt testovací přihlášení" : "Rychlé testovací přihlášení (Vývoj)"}
+              </button>
 
-              {showTesterInput ? (
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customTesterName}
-                    onChange={(e) => setCustomTesterName(e.target.value)}
-                    placeholder="Zadejte uživatelské jméno..."
-                    className="flex-1 text-xs py-2 px-3 rounded-lg border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => testLogin(customTesterName || "CzechBuyTester")}
-                    className="text-xs uppercase tracking-wider"
-                  >
-                    Přihlásit
-                  </Button>
+              {showDevOptions && (
+                <div className="mt-4 p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 space-y-3 text-left">
+                  <p className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300">
+                    Otestujte chování s rolí a bez role:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => testLogin("VIP_Zakaznik", true)}
+                      className="py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                    >
+                      <Crown className="h-3.5 w-3.5" />
+                      <span>Test s VIP rolí</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => testLogin("Bezny_Uzivatel", false)}
+                      className="py-2.5 px-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
+                    >
+                      <User className="h-3.5 w-3.5" />
+                      <span>Test bez role</span>
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => testLogin("CzechBuyFam_VIP")}
-                  className="w-full py-2.5 px-4 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold flex items-center justify-center gap-2 transition"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  <span>Přihlásit jako VIP člen (1-klikový test)</span>
-                </button>
               )}
             </div>
           </div>
@@ -258,34 +253,34 @@ function PrihlaseniContent() {
           <div className="lg:col-span-5 space-y-6">
             <div className="bg-neutral-50 dark:bg-neutral-900/40 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-5">
               <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900 dark:text-white">
-                Výhody přihlášení s Discordem
+                Systém rolí pro CzechBuy
               </h3>
 
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                    <Sparkles className="h-4 w-4" />
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Crown className="h-4 w-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
-                      CzechBuy Fam VIP status
+                      VIP role na Discordu = VIP na webu
                     </h4>
                     <p className="text-[11px] text-neutral-500 leading-relaxed mt-0.5">
-                      Automatické ověření vaší role z oficiálního Discord serveru s přístupem ke speciálním akcím.
+                      Pokud máte na serveru roli VIP Customer, web vám automaticky aktivuje VIP přístup a označení.
                     </p>
                   </div>
                 </div>
 
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Zap className="h-4 w-4" />
+                  <div className="w-8 h-8 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 flex items-center justify-center shrink-0">
+                    <User className="h-4 w-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-neutral-900 dark:text-white">
-                      Přednostní notifikace dropů
+                      Běžný uživatel bez VIP role
                     </h4>
                     <p className="text-[11px] text-neutral-500 leading-relaxed mt-0.5">
-                      Okamžité upozornění na naskladnění limitovaných streetwear kolekcí a parfémů.
+                      Uživatelé bez VIP role nemají žádný VIP odznak a nakupují ve standardním režimu.
                     </p>
                   </div>
                 </div>
@@ -312,7 +307,7 @@ function PrihlaseniContent() {
                   rel="noopener noreferrer"
                   className="text-xs font-semibold text-[#5865F2] hover:underline flex items-center gap-1.5"
                 >
-                  <span>Ještě nejste na našem Discordu? Připojte se</span>
+                  <span>Připojit se na náš Discord server</span>
                   <ArrowRight className="h-3 w-3" />
                 </a>
               </div>
@@ -328,8 +323,8 @@ export default function PrihlaseniPage() {
   return (
     <Suspense
       fallback={
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center text-xs text-neutral-500">
-          Načítání přihlašovacího rozhraní...
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-neutral-900 dark:border-white border-t-transparent rounded-full animate-spin" />
         </div>
       }
     >

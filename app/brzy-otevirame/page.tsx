@@ -142,19 +142,21 @@ export default function ComingSoonCountdownPage() {
                     className="w-4 h-4 rounded-full"
                   />
                   <span className="hidden sm:inline">@{discordUser.username}</span>
-                  {discordUser.isCzechBuyFam && (
-                    <span className="text-[10px] bg-[#5865F2] text-white px-1.5 py-0.2 rounded-full font-bold">
+                  {discordUser.isVip && (
+                    <span className="text-[10px] bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/30 px-1.5 py-0.2 rounded-full font-bold">
                       VIP
                     </span>
                   )}
                 </Link>
-                <Link
-                  href="/parfemy"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition"
-                >
-                  <span>Vstoupit</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+                {discordUser.isVip && (
+                  <Link
+                    href="/parfemy"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition"
+                  >
+                    <span>Vstoupit</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                )}
               </div>
             ) : (
               <Link
@@ -247,13 +249,22 @@ export default function ComingSoonCountdownPage() {
             {/* Prominent VIP Discord Login Action */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               {mounted && isDiscordLoggedIn && discordUser ? (
-                <Link
-                  href="/parfemy"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs uppercase tracking-wider shadow-md hover:opacity-90 transition active:scale-[0.98]"
-                >
-                  <span>Vstoupit do obchodu (VIP Přístup)</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
+                discordUser.isVip ? (
+                  <Link
+                    href="/parfemy"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs uppercase tracking-wider shadow-md hover:opacity-90 transition active:scale-[0.98]"
+                  >
+                    <span>Vstoupit do obchodu (VIP Přístup)</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : (
+                  <div className="flex flex-col sm:flex-row items-center gap-2 px-4 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400">
+                    <span>Přihlášen jako <strong>@{discordUser.username}</strong> (bez VIP role)</span>
+                    <Link href="/prihlaseni" className="text-[#5865F2] font-semibold hover:underline">
+                      Zkontrolovat profil →
+                    </Link>
+                  </div>
+                )
               ) : (
                 <Link
                   href="/prihlaseni"
@@ -332,20 +343,31 @@ export default function ComingSoonCountdownPage() {
                     </div>
                     <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5">
                       {mounted && isDiscordLoggedIn && discordUser
-                        ? `Jsi přihlášen jako @${discordUser.username}. Máš aktivní přednostní přístup.`
-                        : "Přihlas se svým Discord účtem a odemkni si nabídku ještě před oficiálním zahájením."}
+                        ? discordUser.isVip
+                          ? `Jsi přihlášen jako @${discordUser.username} s aktivní VIP rolí. Máš přednostní přístup.`
+                          : `Jsi přihlášen jako @${discordUser.username}. Pro přednostní vstup před otevřením je potřeba mít VIP roli na Discordu.`
+                        : "Přihlas se svým Discord účtem. Pokud máš na serveru VIP roli, odemkne se ti přednostní vstup."}
                     </p>
                   </div>
                 </div>
 
                 {mounted && isDiscordLoggedIn ? (
-                  <Link
-                    href="/parfemy"
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs shadow-md hover:opacity-90 transition shrink-0"
-                  >
-                    <span>Vstoupit do obchodu</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                  discordUser?.isVip ? (
+                    <Link
+                      href="/parfemy"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-bold text-xs shadow-md hover:opacity-90 transition shrink-0"
+                    >
+                      <span>Vstoupit do obchodu</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/prihlaseni"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-bold text-xs transition shrink-0"
+                    >
+                      <span>Můj profil</span>
+                    </Link>
+                  )
                 ) : (
                   <Link
                     href="/prihlaseni"

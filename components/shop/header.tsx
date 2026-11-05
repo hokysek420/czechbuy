@@ -162,9 +162,9 @@ export function Header() {
                 <span className="hidden sm:inline font-semibold max-w-[85px] truncate text-[11px]">
                   {user.global_name || user.username}
                 </span>
-                {user.isCzechBuyFam && (
-                  <span className="hidden md:inline text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1 rounded">
-                    FAM
+                {user.isVip && (
+                  <span className="inline-flex items-center gap-0.5 text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold px-1.5 py-0.5 rounded-full border border-amber-500/30">
+                    VIP
                   </span>
                 )}
               </Link>
@@ -234,9 +234,9 @@ export function Header() {
                     <p className="text-xs font-bold text-neutral-900 dark:text-white truncate">
                       {user.global_name || user.username}
                     </p>
-                    {user.isCzechBuyFam && (
-                      <span className="text-[9px] bg-amber-500/10 text-amber-500 font-bold px-1 rounded">
-                        FAM
+                    {user.isVip && (
+                      <span className="inline-flex items-center gap-0.5 text-[9px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-extrabold px-1.5 py-0.5 rounded-full border border-amber-500/30">
+                        VIP
                       </span>
                     )}
                   </div>

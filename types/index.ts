@@ -102,7 +102,6 @@ export interface Order {
   status: OrderStatus;
 }
 
-
 export interface DiscordUser {
   id: string;
   username: string;
@@ -113,5 +112,8 @@ export interface DiscordUser {
   email?: string | null;
   verified?: boolean;
   isCzechBuyFam?: boolean;
+  isVip?: boolean;
+  roleName?: string | null;
+  roles?: string[];
   joinedAt?: string;
 }
