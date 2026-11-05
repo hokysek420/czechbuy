@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -29,6 +29,35 @@ function PrihlaseniContent() {
   const [showDevOptions, setShowDevOptions] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const isOwner = Boolean(
+    user?.isOwner ||
+    user?.id === "1492628172611518504" ||
+    user?.username === "hokysek" ||
+    user?.roles?.includes("1567522100523040914")
+  );
+  const isAdmin = Boolean(isOwner || user?.isAdmin);
+  const isMod = Boolean(isOwner || user?.isMod || user?.roles?.includes("1567522104293855253"));
+  const isVip = Boolean(isOwner || user?.isVip || user?.roles?.includes("1567522107393581176"));
+
+  const displayBadges =
+    user?.roleBadges && user.roleBadges.length > 0
+      ? user.roleBadges
+      : isOwner
+      ? [
+          { id: "owner", name: "Owner", color: "#f43f5e" },
+          { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+          { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+          { id: "1567522110648221797", name: "CzechBuy Fam", color: "#a855f7" },
+        ]
+      : [];
+
+  // Auto-sync roles on page load
+  useEffect(() => {
+    if (user?.id) {
+      refreshVipStatus();
+    }
+  }, [user?.id]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refreshVipStatus();
@@ -49,7 +78,7 @@ function PrihlaseniContent() {
                   className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#5865F2]/40 shadow-sm"
                 />
                 <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#23a55a] border-2 border-white dark:border-neutral-900" />
-                {user.isVip && (
+                {(isVip || isOwner) && (
                   <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-neutral-950 font-bold text-[10px] shadow">
                     <Crown className="h-3 w-3" />
                   </span>
@@ -60,22 +89,22 @@ function PrihlaseniContent() {
                   <h1 className="text-2xl font-black text-neutral-950 dark:text-white">
                     {user.global_name || user.username}
                   </h1>
-                  {user.isOwner ? (
+                  {isOwner ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                       <Crown className="h-3 w-3" />
                       <span>Owner</span>
                     </span>
-                  ) : user.isAdmin ? (
+                  ) : isAdmin ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3" />
                       <span>Admin</span>
                     </span>
-                  ) : user.isMod ? (
+                  ) : isMod ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3" />
                       <span>Moderátor</span>
                     </span>
-                  ) : user.isVip ? (
+                  ) : isVip ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                       <Crown className="h-3 w-3" />
                       <span>VIP Zákazník</span>
@@ -112,7 +141,7 @@ function PrihlaseniContent() {
           </div>
 
           {/* Owner direct admin panel access card */}
-          {(user.isOwner || user.isAdmin) && (
+          {(isOwner || isAdmin) && (
             <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-transparent border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
@@ -157,22 +186,22 @@ function PrihlaseniContent() {
                 Discord Role na Serveru
               </span>
               <p className="text-base font-extrabold text-neutral-900 dark:text-white mt-1 flex items-center gap-1.5">
-                {user.isOwner ? (
+                {isOwner ? (
                   <>
                     <Crown className="h-4 w-4 text-rose-500" />
                     <span className="text-rose-500">Owner</span>
                   </>
-                ) : user.isAdmin ? (
+                ) : isAdmin ? (
                   <>
                     <ShieldCheck className="h-4 w-4 text-indigo-500" />
                     <span className="text-indigo-500">Admin</span>
                   </>
-                ) : user.isMod ? (
+                ) : isMod ? (
                   <>
                     <ShieldCheck className="h-4 w-4 text-cyan-500" />
                     <span className="text-cyan-500">Moderátor</span>
                   </>
-                ) : user.isVip ? (
+                ) : isVip ? (
                   <>
                     <Crown className="h-4 w-4 text-amber-500" />
                     <span className="text-amber-500">VIP Zákazník</span>
@@ -190,9 +219,9 @@ function PrihlaseniContent() {
                 )}
               </p>
               <p className="text-[11px] text-neutral-500 mt-1">
-                {user.isOwner
+                {isOwner
                   ? "Vlastník serveru a plný přístup do administrace"
-                  : user.isVip
+                  : isVip
                   ? "Aktivní VIP výhody a přednostní přístup"
                   : user.roleName
                   ? "Oficiální role ze serveru CzechBuy Fam"
@@ -215,13 +244,13 @@ function PrihlaseniContent() {
           </div>
 
           {/* Active Discord roles badges showcase */}
-          {user.roleBadges && user.roleBadges.length > 0 && (
+          {displayBadges.length > 0 && (
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-200/80 dark:border-neutral-800">
               <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 block mb-2">
                 Přiřazené role na Discord serveru CzechBuy Fam:
               </span>
               <div className="flex flex-wrap gap-2">
-                {user.roleBadges.map((rb) => (
+                {displayBadges.map((rb) => (
                   <span
                     key={rb.id}
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"

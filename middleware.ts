@@ -40,6 +40,7 @@ export function middleware(request: NextRequest) {
           parsedUser.isOwner ||
           parsedUser.isAdmin ||
           parsedUser.id === "1492628172611518504" ||
+          parsedUser.username === "hokysek" ||
           parsedUser.roles?.includes("1567522100523040914")
         ) {
           isDiscordOwnerOrAdmin = true;

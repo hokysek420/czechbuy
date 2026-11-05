@@ -18,6 +18,16 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const isOwner = Boolean(
+    user?.isOwner ||
+    user?.id === "1492628172611518504" ||
+    user?.username === "hokysek" ||
+    user?.roles?.includes("1567522100523040914")
+  );
+  const isAdmin = Boolean(isOwner || user?.isAdmin);
+  const isMod = Boolean(isOwner || user?.isMod || user?.roles?.includes("1567522104293855253"));
+  const isVip = Boolean(isOwner || user?.isVip || user?.roles?.includes("1567522107393581176"));
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -148,7 +158,7 @@ export function Header() {
           {/* Action icons */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Admin Panel Quick Access for Owner / Admin */}
-            {isLoggedIn && user && (user.isOwner || user.isAdmin) && (
+            {isLoggedIn && user && (isOwner || isAdmin) && (
               <Link
                 href="/interni-portal-8f2a9x/sprava"
                 className="hidden sm:inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition shadow-xs"
@@ -164,7 +174,7 @@ export function Header() {
               <Link
                 href="/prihlaseni"
                 className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 hover:border-neutral-700 transition shadow-sm group"
-                title={`Přihlášen jako ${user.username} (${user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")})`}
+                title={`Přihlášen jako ${user.username} (${isOwner ? "Owner" : isAdmin ? "Admin" : isMod ? "Moderátor" : isVip ? "VIP" : user.roleName || "Bez role"})`}
               >
                 <div className="relative shrink-0">
                   <img
@@ -180,20 +190,20 @@ export function Header() {
                   </span>
                   <span
                     className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
-                      user.isOwner
+                      isOwner
                         ? "text-rose-400 font-bold"
-                        : user.isAdmin
+                        : isAdmin
                         ? "text-indigo-400 font-bold"
-                        : user.isMod
+                        : isMod
                         ? "text-cyan-400 font-semibold"
-                        : user.isVip
+                        : isVip
                         ? "text-amber-400 font-semibold"
                         : user.roleName
                         ? "text-purple-400 font-medium"
                         : "text-neutral-400 font-normal"
                     }`}
                   >
-                    {user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")}
+                    {isOwner ? "Owner" : isAdmin ? "Admin" : isMod ? "Moderátor" : isVip ? "VIP" : user.roleName || "Bez role"}
                   </span>
                 </div>
               </Link>
@@ -267,20 +277,20 @@ export function Header() {
                   </p>
                   <p
                     className={`text-xs font-medium mt-0.5 ${
-                      user.isOwner
+                      isOwner
                         ? "text-rose-400 font-bold"
-                        : user.isAdmin
+                        : isAdmin
                         ? "text-indigo-400 font-bold"
-                        : user.isMod
+                        : isMod
                         ? "text-cyan-400 font-semibold"
-                        : user.isVip
+                        : isVip
                         ? "text-amber-400 font-semibold"
                         : user.roleName
                         ? "text-purple-400 font-medium"
                         : "text-neutral-400 font-normal"
                     }`}
                   >
-                    {user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")}
+                    {isOwner ? "Owner" : isAdmin ? "Admin" : isMod ? "Moderátor" : isVip ? "VIP" : user.roleName || "Bez role"}
                   </p>
                 </div>
                 <span className="text-xs font-semibold text-neutral-400">Můj profil →</span>
@@ -298,7 +308,7 @@ export function Header() {
           </div>
 
           {/* Mobile Admin Link if Owner/Admin */}
-          {isLoggedIn && user && (user.isOwner || user.isAdmin) && (
+          {isLoggedIn && user && (isOwner || isAdmin) && (
             <div className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
               <Link
                 href="/interni-portal-8f2a9x/sprava"

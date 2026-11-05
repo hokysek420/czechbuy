@@ -48,21 +48,90 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
   useEffect(() => {
     // 1. Initial load from localStorage / Cookie
     try {
+      let loadedUser: DiscordUser | null = null;
       const stored = localStorage.getItem(DISCORD_USER_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed && parsed.id) {
-          setUser(parsed);
+          loadedUser = parsed;
         }
       } else {
         const cookieVal = readCookie(DISCORD_USER_COOKIE);
         if (cookieVal) {
           const parsed = JSON.parse(cookieVal);
           if (parsed && parsed.id) {
-            setUser(parsed);
-            localStorage.setItem(DISCORD_USER_STORAGE_KEY, JSON.stringify(parsed));
+            loadedUser = parsed;
           }
         }
+      }
+
+      if (loadedUser && loadedUser.id) {
+        // Owner failsafe upgrade for hokysek
+        if (loadedUser.id === "1492628172611518504" || loadedUser.username === "hokysek") {
+          loadedUser.isOwner = true;
+          loadedUser.isAdmin = true;
+          loadedUser.isVip = true;
+          loadedUser.isCzechBuyFam = true;
+          loadedUser.roleName = "Owner";
+          loadedUser.roleColor = "#f43f5e";
+          if (!loadedUser.roleBadges || loadedUser.roleBadges.length === 0) {
+            loadedUser.roleBadges = [
+              { id: "owner", name: "Owner", color: "#f43f5e" },
+              { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+              { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+              { id: "1567522110648221797", name: "CzechBuy Fam", color: "#a855f7" },
+            ];
+          }
+        }
+
+        setUser(loadedUser);
+        localStorage.setItem(DISCORD_USER_STORAGE_KEY, JSON.stringify(loadedUser));
+        writeCookie(DISCORD_USER_COOKIE, JSON.stringify(loadedUser));
+
+        // Auto-sync in background to get latest server roles
+        fetch(`/api/auth/discord/member-vip?userId=${loadedUser.id}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            const rs = data?.roleStatus || data?.vipStatus;
+            if (rs) {
+              const isOwnerSync = Boolean(
+                rs.isOwner ||
+                loadedUser?.isOwner ||
+                loadedUser?.id === "1492628172611518504" ||
+                loadedUser?.username === "hokysek"
+              );
+              const isAdminSync = Boolean(isOwnerSync || rs.isAdmin || loadedUser?.isAdmin);
+              const isModSync = Boolean(isOwnerSync || rs.isMod || loadedUser?.isMod);
+              const isVipSync = Boolean(isOwnerSync || rs.isVip || loadedUser?.isVip);
+
+              let badgesSync = (rs.roleBadges && rs.roleBadges.length > 0) ? rs.roleBadges : (loadedUser?.roleBadges || []);
+              if (isOwnerSync && (!badgesSync || badgesSync.length === 0)) {
+                badgesSync = [
+                  { id: "owner", name: "Owner", color: "#f43f5e" },
+                  { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+                  { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+                  { id: "1567522110648221797", name: "CzechBuy Fam", color: "#a855f7" },
+                ];
+              }
+
+              const syncedUser: DiscordUser = {
+                ...loadedUser!,
+                isCzechBuyFam: Boolean(rs.isMember || rs.isCzechBuyFam || isOwnerSync),
+                isVip: isVipSync,
+                isOwner: isOwnerSync,
+                isAdmin: isAdminSync,
+                isMod: isModSync,
+                roleName: isOwnerSync ? "Owner" : (rs.roleName || loadedUser?.roleName || null),
+                roleColor: isOwnerSync ? "#f43f5e" : (rs.roleColor || loadedUser?.roleColor || null),
+                roles: (rs.roles && rs.roles.length > 0) ? rs.roles : (loadedUser?.roles || []),
+                roleBadges: badgesSync,
+              };
+              setUser(syncedUser);
+              localStorage.setItem(DISCORD_USER_STORAGE_KEY, JSON.stringify(syncedUser));
+              writeCookie(DISCORD_USER_COOKIE, JSON.stringify(syncedUser));
+            }
+          })
+          .catch(() => {});
       }
     } catch {
       // fallback
@@ -141,17 +210,37 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
         const data = await res.json();
         const rs = data?.roleStatus || data?.vipStatus;
         if (rs) {
+          const isOwnerSync = Boolean(
+            rs.isOwner ||
+            user.isOwner ||
+            user.id === "1492628172611518504" ||
+            user.username === "hokysek"
+          );
+          const isAdminSync = Boolean(isOwnerSync || rs.isAdmin || user.isAdmin);
+          const isModSync = Boolean(isOwnerSync || rs.isMod || user.isMod);
+          const isVipSync = Boolean(isOwnerSync || rs.isVip || user.isVip);
+
+          let badgesSync = (rs.roleBadges && rs.roleBadges.length > 0) ? rs.roleBadges : (user.roleBadges || []);
+          if (isOwnerSync && (!badgesSync || badgesSync.length === 0)) {
+            badgesSync = [
+              { id: "owner", name: "Owner", color: "#f43f5e" },
+              { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+              { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+              { id: "1567522110648221797", name: "CzechBuy Fam", color: "#a855f7" },
+            ];
+          }
+
           const updated: DiscordUser = {
             ...user,
-            isCzechBuyFam: Boolean(rs.isMember || rs.isCzechBuyFam),
-            isVip: Boolean(rs.isVip),
-            isOwner: Boolean(rs.isOwner),
-            isAdmin: Boolean(rs.isAdmin),
-            isMod: Boolean(rs.isMod),
-            roleName: rs.roleName || null,
-            roleColor: rs.roleColor || null,
-            roles: rs.roles || [],
-            roleBadges: rs.roleBadges || [],
+            isCzechBuyFam: Boolean(rs.isMember || rs.isCzechBuyFam || isOwnerSync),
+            isVip: isVipSync,
+            isOwner: isOwnerSync,
+            isAdmin: isAdminSync,
+            isMod: isModSync,
+            roleName: isOwnerSync ? "Owner" : (rs.roleName || user.roleName || null),
+            roleColor: isOwnerSync ? "#f43f5e" : (rs.roleColor || user.roleColor || null),
+            roles: (rs.roles && rs.roles.length > 0) ? rs.roles : (user.roles || []),
+            roleBadges: badgesSync,
           };
           setSession(updated);
         }

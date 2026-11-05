@@ -17,7 +17,15 @@ export default function AdminLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const isDiscordOwner = isLoggedIn && user && (user.isOwner || user.isAdmin);
+  const isDiscordOwner = Boolean(
+    isLoggedIn &&
+    user &&
+    (user.isOwner ||
+     user.isAdmin ||
+     user.id === "1492628172611518504" ||
+     user.username === "hokysek" ||
+     user.roles?.includes("1567522100523040914"))
+  );
 
   useEffect(() => {
     // If already authenticated as Discord Owner, redirect directly to admin dashboard
@@ -101,7 +109,7 @@ export default function AdminLoginPage() {
                 </span>
               </div>
               <p className="text-xs text-neutral-300">
-                Jste přihlášen jako <strong>@{user.username}</strong> s rolí Owner. Máte plná administrátorská práva.
+                Jste přihlášen jako <strong>@{user?.username || "Owner"}</strong> s rolí Owner. Máte plná administrátorská práva.
               </p>
               <Link href="/interni-portal-8f2a9x/sprava">
                 <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider">

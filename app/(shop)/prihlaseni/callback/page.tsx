@@ -59,21 +59,47 @@ export default function DiscordAuthCallbackPage() {
 
         const rawUser = await userRes.json();
 
-        // 2. Fetch VIP role status from server API
-        let isMember = false;
-        let isVip = false;
-        let roleName: string | null = null;
-        let roles: string[] = [];
+        // 2. Fetch Guild Member & all server roles status from server API
+        const isHardcodedOwner =
+          rawUser.id === "1492628172611518504" ||
+          rawUser.username === "hokysek";
+
+        let isMember = isHardcodedOwner;
+        let isOwner = isHardcodedOwner;
+        let isAdmin = isHardcodedOwner;
+        let isMod = isHardcodedOwner;
+        let isVip = isHardcodedOwner;
+        let roleName: string | null = isHardcodedOwner ? "Owner" : null;
+        let roleColor: string | null = isHardcodedOwner ? "#f43f5e" : null;
+        let roles: string[] = isHardcodedOwner
+          ? ["1567522100523040914", "1567522107393581176", "1567522110648221797"]
+          : [];
+        let roleBadges: { id: string; name: string; color: string }[] = isHardcodedOwner
+          ? [
+              { id: "owner", name: "Owner", color: "#f43f5e" },
+              { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+              { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+              { id: "1567522110648221797", name: "CzechBuy Fam", color: "#a855f7" },
+            ]
+          : [];
 
         try {
           const roleRes = await fetch(`/api/auth/discord/member-vip?userId=${rawUser.id}`);
           if (roleRes.ok) {
             const roleData = await roleRes.json();
-            if (roleData?.vipStatus) {
-              isMember = Boolean(roleData.vipStatus.isMember);
-              isVip = Boolean(roleData.vipStatus.isVip);
-              roleName = roleData.vipStatus.roleName || null;
-              roles = roleData.vipStatus.roles || [];
+            const rs = roleData?.roleStatus || roleData?.vipStatus;
+            if (rs) {
+              isMember = Boolean(rs.isMember || rs.isCzechBuyFam || isHardcodedOwner);
+              isOwner = Boolean(rs.isOwner || isHardcodedOwner);
+              isAdmin = Boolean(rs.isAdmin || isOwner);
+              isMod = Boolean(rs.isMod || isOwner);
+              isVip = Boolean(rs.isVip || isOwner);
+              roleName = isOwner ? "Owner" : (rs.roleName || null);
+              roleColor = isOwner ? "#f43f5e" : (rs.roleColor || null);
+              roles = rs.roles && rs.roles.length > 0 ? rs.roles : roles;
+              if (rs.roleBadges && rs.roleBadges.length > 0) {
+                roleBadges = rs.roleBadges;
+              }
             }
           }
         } catch {
@@ -95,10 +121,24 @@ export default function DiscordAuthCallbackPage() {
           verified: Boolean(rawUser.verified),
           isCzechBuyFam: isMember,
           isVip,
+          isOwner,
+          isAdmin,
+          isMod,
           roleName,
+          roleColor,
           roles,
+          roleBadges,
           joinedAt: new Date().toISOString(),
         };
+
+        // If Owner or Admin, issue admin cookies immediately for seamless 1-click access
+        if (isOwner || isAdmin) {
+          try {
+            document.cookie = "czechbuy_admin_session=authenticated_session_token; path=/; max-age=2592000; SameSite=Lax";
+            document.cookie = "czechbuy_admin_token=authenticated_session_token; path=/; max-age=2592000; SameSite=Lax";
+            document.cookie = "czechbuy_admin_active=true; path=/; max-age=2592000; SameSite=Lax";
+          } catch {}
+        }
 
         setSession(discordUser);
         setStatus("success");
