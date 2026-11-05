@@ -151,14 +151,34 @@ export default function ComingSoonCountdownPage() {
                     </span>
                     <span
                       className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
-                        discordUser.isVip ? "text-amber-400" : "text-neutral-400"
+                        discordUser.isOwner
+                          ? "text-rose-400 font-bold"
+                          : discordUser.isAdmin
+                          ? "text-indigo-400 font-bold"
+                          : discordUser.isMod
+                          ? "text-cyan-400 font-semibold"
+                          : discordUser.isVip
+                          ? "text-amber-400 font-semibold"
+                          : discordUser.roleName
+                          ? "text-purple-400 font-medium"
+                          : "text-neutral-400 font-normal"
                       }`}
                     >
-                      {discordUser.isVip ? "VIP" : "Bez role"}
+                      {discordUser.roleName || (discordUser.isOwner ? "Owner" : discordUser.isVip ? "VIP" : "Bez role")}
                     </span>
                   </div>
                 </Link>
-                {discordUser.isVip && (
+                {(discordUser.isOwner || discordUser.isAdmin) && (
+                  <Link
+                    href="/interni-portal-8f2a9x/sprava"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition shadow-xs"
+                    title="Vstoupit do administrace e-shopu"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Admin</span>
+                  </Link>
+                )}
+                {(discordUser.isVip || discordUser.isOwner) && (
                   <Link
                     href="/parfemy"
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-neutral-900 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-900 text-xs font-bold shadow-xs transition"

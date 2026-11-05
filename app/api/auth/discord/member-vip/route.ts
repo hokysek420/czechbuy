@@ -34,21 +34,26 @@ export async function GET(request: Request) {
     );
   }
 
-  const vipStatus = await fetchGuildMemberVipStatus(targetUserId);
+  const roleStatus = await fetchGuildMemberVipStatus(targetUserId);
 
   // If this matches the logged in user, refresh their cookie session
   if (currentUser && currentUser.id === targetUserId) {
     const updatedUser: DiscordUser = {
       ...currentUser,
-      isCzechBuyFam: vipStatus.isMember,
-      isVip: vipStatus.isVip,
-      roleName: vipStatus.roleName,
-      roles: vipStatus.roles,
+      isCzechBuyFam: roleStatus.isMember,
+      isVip: roleStatus.isVip,
+      isOwner: roleStatus.isOwner,
+      isAdmin: roleStatus.isAdmin,
+      isMod: roleStatus.isMod,
+      roleName: roleStatus.roleName,
+      roleColor: roleStatus.roleColor,
+      roles: roleStatus.roles,
+      roleBadges: roleStatus.roleBadges,
     };
 
     const res = NextResponse.json({
       success: true,
-      vipStatus,
+      roleStatus,
       user: updatedUser,
     });
 
@@ -58,11 +63,33 @@ export async function GET(request: Request) {
       sameSite: "lax",
     });
 
+    // If user is Owner or Admin on Discord, ensure Admin Panel session is set
+    if (roleStatus.isOwner || roleStatus.isAdmin) {
+      res.cookies.set("czechbuy_admin_session", "authenticated_session_token", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+      res.cookies.set("czechbuy_admin_token", "authenticated_session_token", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+      res.cookies.set("czechbuy_admin_active", "true", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: false,
+      });
+    }
+
     return res;
   }
 
   return NextResponse.json({
     success: true,
-    vipStatus,
+    roleStatus,
   });
 }

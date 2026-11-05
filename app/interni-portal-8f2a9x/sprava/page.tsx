@@ -31,6 +31,9 @@ import {
   Gamepad2,
   Tag,
   Layers,
+  Crown,
+  Shield,
+  ShieldCheck,
 } from "lucide-react";
 import { DiscordIcon, InstagramIcon } from "@/components/ui/social-icons";
 import { Product, Order, OrderStatus, ProductCategory, FragranceConcentration, FragranceGender } from "@/types";
@@ -57,9 +60,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const { user: discordUser } = useDiscordAuth();
   const [activeTab, setActiveTab] = useState<"products" | "categories" | "countdown" | "orders" | "discord">("products");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<"all" | ProductCategory>("all");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -748,6 +753,16 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            {discordUser && (discordUser.isOwner || discordUser.isAdmin) && (
+              <div className="hidden sm:inline-flex items-center gap-2 py-1 px-3 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold">
+                <Crown className="h-3.5 w-3.5 text-rose-500" />
+                <span>@{discordUser.username}</span>
+                <span className="text-[10px] font-black uppercase bg-rose-500 text-white px-1.5 py-0.5 rounded-full">
+                  {discordUser.isOwner ? "Owner" : "Admin"}
+                </span>
+              </div>
+            )}
+
             <Link
               href="/"
               target="_blank"
@@ -1804,7 +1819,102 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            {/* Configuration instructions card */}
+            {/* Full Discord Server & Role Synchronization Matrix */}
+            <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5865F2] to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <Crown className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                      Propojení Discord Serveru (CzechBuy Fam) & Webových Rolí
+                    </h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Server ID: <code className="font-mono text-[11px] bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">1567519231984271472</code> • Majitel serveru: <strong>@hokysek</strong>
+                    </p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  <span>Plná synchronizace aktivní</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-500">
+                      Owner & Founder
+                    </span>
+                    <Crown className="h-4 w-4 text-rose-500" />
+                  </div>
+                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
+                    Owner Role
+                  </h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    Plný přístup do administrace e-shopu, správa produktů a objednávek, automatické VIP výhody.
+                  </p>
+                  <span className="inline-block text-[10px] font-mono text-neutral-400">
+                    ID: 1567522100523040914
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-cyan-500">
+                      Tým podpory
+                    </span>
+                    <ShieldCheck className="h-4 w-4 text-cyan-500" />
+                  </div>
+                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
+                    Moderátor / Support
+                  </h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    Řešení zákaznických dotazů, ticketů a zákaznické komunity.
+                  </p>
+                  <span className="inline-block text-[10px] font-mono text-neutral-400">
+                    ID: 1567522104293855253
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-500">
+                      Věrnostní VIP
+                    </span>
+                    <Crown className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
+                    VIP Customer
+                  </h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    Zlatý odznak na webu, přednostní vstup do obchodu přes odpočet a exkluzivní dropy.
+                  </p>
+                  <span className="inline-block text-[10px] font-mono text-neutral-400">
+                    ID: 1567522107393581176
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-purple-500">
+                      Komunita
+                    </span>
+                    <Sparkles className="h-4 w-4 text-purple-500" />
+                  </div>
+                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
+                    CzechBuy Fam
+                  </h4>
+                  <p className="text-[11px] text-neutral-500 leading-relaxed">
+                    Každý ověřený člen oficiálního Discord serveru.
+                  </p>
+                  <span className="inline-block text-[10px] font-mono text-neutral-400">
+                    ID: 1567522110648221797
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-6 shadow-xs space-y-4 text-xs">
               <h3 className="font-bold text-sm text-neutral-900 dark:text-white">
                 Návod na propojení Discord Webhooku (Checklist proměnných prostředí)

@@ -15,7 +15,10 @@ interface DiscordAuthContextType {
   login: () => void;
   logout: () => Promise<void>;
   setSession: (user: DiscordUser | null) => void;
-  testLogin: (customUsername?: string, isVip?: boolean) => void;
+  testLogin: (
+    customUsername?: string,
+    roleTypeOrVip?: "owner" | "vip" | "mod" | "member" | "none" | boolean
+  ) => void;
   refreshVipStatus: () => Promise<void>;
 }
 
@@ -136,13 +139,19 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
       const res = await fetch(`/api/auth/discord/member-vip?userId=${user.id}`);
       if (res.ok) {
         const data = await res.json();
-        if (data?.vipStatus) {
+        const rs = data?.roleStatus || data?.vipStatus;
+        if (rs) {
           const updated: DiscordUser = {
             ...user,
-            isCzechBuyFam: Boolean(data.vipStatus.isMember),
-            isVip: Boolean(data.vipStatus.isVip),
-            roleName: data.vipStatus.roleName || null,
-            roles: data.vipStatus.roles || [],
+            isCzechBuyFam: Boolean(rs.isMember || rs.isCzechBuyFam),
+            isVip: Boolean(rs.isVip),
+            isOwner: Boolean(rs.isOwner),
+            isAdmin: Boolean(rs.isAdmin),
+            isMod: Boolean(rs.isMod),
+            roleName: rs.roleName || null,
+            roleColor: rs.roleColor || null,
+            roles: rs.roles || [],
+            roleBadges: rs.roleBadges || [],
           };
           setSession(updated);
         }
@@ -150,10 +159,48 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
     } catch {}
   };
 
-  // Instant Test Login for development / local testing
-  const testLogin = (customUsername = "CzechBuy_User", isVip = false) => {
+  // Instant Test Login for development / local testing across all roles
+  const testLogin = (
+    customUsername = "hokysek",
+    roleTypeOrVip: "owner" | "vip" | "mod" | "member" | "none" | boolean = "none"
+  ) => {
+    const roleType: "owner" | "vip" | "mod" | "member" | "none" =
+      typeof roleTypeOrVip === "boolean"
+        ? roleTypeOrVip
+          ? "vip"
+          : "none"
+        : roleTypeOrVip;
+
+    const isOwner = roleType === "owner";
+    const isAdmin = roleType === "owner";
+    const isMod = roleType === "mod" || isOwner;
+    const isVip = roleType === "vip" || isOwner || isMod;
+    const isMember = roleType !== "none";
+
+    let roleName = null;
+    let roleColor = null;
+    let roles: string[] = [];
+
+    if (isOwner) {
+      roleName = "Owner";
+      roleColor = "#f43f5e";
+      roles = ["1567522100523040914", "1567522107393581176", "1567522110648221797"];
+    } else if (roleType === "mod") {
+      roleName = "Moderátor";
+      roleColor = "#06b6d4";
+      roles = ["1567522104293855253", "1567522110648221797"];
+    } else if (isVip) {
+      roleName = "VIP";
+      roleColor = "#f59e0b";
+      roles = ["1567522107393581176"];
+    } else if (isMember) {
+      roleName = "Člen";
+      roleColor = "#a855f7";
+      roles = ["1567522110648221797"];
+    }
+
     const demoUser: DiscordUser = {
-      id: "1558604485088256060",
+      id: isOwner ? "1492628172611518504" : "1558604485088256060",
       username: customUsername.toLowerCase().replace(/\s+/g, "_"),
       global_name: customUsername,
       discriminator: "0",
@@ -161,10 +208,23 @@ export function DiscordAuthProvider({ children }: { children: React.ReactNode })
       avatarUrl: getDiscordAvatarUrl({ discriminator: "0" }),
       email: `${customUsername.toLowerCase()}@czechbuy.fam`,
       verified: true,
-      isCzechBuyFam: true,
+      isCzechBuyFam: isMember,
       isVip,
-      roleName: isVip ? "VIP" : null,
-      roles: isVip ? ["1567522107393581176"] : [],
+      isOwner,
+      isAdmin,
+      isMod,
+      roleName,
+      roleColor,
+      roles,
+      roleBadges: isOwner
+        ? [
+            { id: "owner", name: "Owner", color: "#f43f5e" },
+            { id: "1567522100523040914", name: "Founder / Admin", color: "#6366f1" },
+            { id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" },
+          ]
+        : isVip
+        ? [{ id: "1567522107393581176", name: "VIP Customer", color: "#f59e0b" }]
+        : [],
       joinedAt: new Date().toISOString(),
     };
     setSession(demoUser);

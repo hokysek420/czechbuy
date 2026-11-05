@@ -26,9 +26,35 @@ export function middleware(request: NextRequest) {
   const adminToken =
     request.cookies.get(ADMIN_SESSION_COOKIE)?.value ||
     request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  const isAuthenticatedAdmin = Boolean(adminToken && adminToken.trim().length > 0);
 
-  // 2. Scenario: Authenticated Administrator
+  // Check Discord user cookie for Owner, Admin, or VIP roles
+  const discordUserCookie = request.cookies.get(DISCORD_USER_COOKIE)?.value;
+  let isDiscordOwnerOrAdmin = false;
+  let isVipUser = false;
+
+  if (discordUserCookie) {
+    try {
+      const parsedUser = JSON.parse(decodeURIComponent(discordUserCookie));
+      if (parsedUser) {
+        if (
+          parsedUser.isOwner ||
+          parsedUser.isAdmin ||
+          parsedUser.id === "1492628172611518504" ||
+          parsedUser.roles?.includes("1567522100523040914")
+        ) {
+          isDiscordOwnerOrAdmin = true;
+          isVipUser = true;
+        } else if (parsedUser.isVip) {
+          isVipUser = true;
+        }
+      }
+    } catch {}
+  }
+
+  const isAuthenticatedAdmin =
+    Boolean(adminToken && adminToken.trim().length > 0) || isDiscordOwnerOrAdmin;
+
+  // 2. Scenario: Authenticated Administrator (or Discord Owner)
   if (isAuthenticatedAdmin) {
     // If authenticated admin visits the login page, redirect to management dashboard
     if (pathname === `${ADMIN_BASE_PATH}/login`) {
@@ -57,19 +83,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 5. Scenario: Discord VIP early access check
-  const discordUserCookie = request.cookies.get(DISCORD_USER_COOKIE)?.value;
-  let isVipUser = false;
-  if (discordUserCookie) {
-    try {
-      const parsedUser = JSON.parse(decodeURIComponent(discordUserCookie));
-      if (parsedUser && parsedUser.isVip) {
-        isVipUser = true;
-      }
-    } catch {}
-  }
-
-  // Only users who hold the VIP role on Discord get early access to the store before official launch
+  // 5. Scenario: Discord VIP early access check (isVipUser calculated above)
   if (isVipUser) {
     return NextResponse.next();
   }

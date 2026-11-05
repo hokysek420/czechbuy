@@ -102,6 +102,12 @@ export interface Order {
   status: OrderStatus;
 }
 
+export interface DiscordRoleBadge {
+  id: string;
+  name: string;
+  color?: string;
+}
+
 export interface DiscordUser {
   id: string;
   username: string;
@@ -113,7 +119,12 @@ export interface DiscordUser {
   verified?: boolean;
   isCzechBuyFam?: boolean;
   isVip?: boolean;
+  isOwner?: boolean;
+  isAdmin?: boolean;
+  isMod?: boolean;
   roleName?: string | null;
+  roleColor?: string | null;
   roles?: string[];
+  roleBadges?: DiscordRoleBadge[];
   joinedAt?: string;
 }

@@ -56,14 +56,33 @@ function PrihlaseniContent() {
                 )}
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-black text-neutral-950 dark:text-white">
                     {user.global_name || user.username}
                   </h1>
-                  {user.isVip ? (
+                  {user.isOwner ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <Crown className="h-3 w-3" />
+                      <span>Owner</span>
+                    </span>
+                  ) : user.isAdmin ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      <span>Admin</span>
+                    </span>
+                  ) : user.isMod ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                      <ShieldCheck className="h-3 w-3" />
+                      <span>Moderátor</span>
+                    </span>
+                  ) : user.isVip ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                       <Crown className="h-3 w-3" />
                       <span>VIP Zákazník</span>
+                    </span>
+                  ) : user.roleName ? (
+                    <span className="px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 text-[10px] font-bold uppercase tracking-wider">
+                      {user.roleName}
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-400 text-[10px] font-medium">
@@ -92,6 +111,32 @@ function PrihlaseniContent() {
             </Button>
           </div>
 
+          {/* Owner direct admin panel access card */}
+          {(user.isOwner || user.isAdmin) && (
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-500/15 via-pink-500/10 to-transparent border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                    <span>Majitel Discord Serveru & E-shopu</span>
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-600 text-white">Owner</span>
+                  </h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    Máte neomezený přístup do administrace, správy produktů, objednávek i kategorií.
+                  </p>
+                </div>
+              </div>
+              <Link href="/interni-portal-8f2a9x/sprava">
+                <Button className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                  <span>Vstoupit do administrace</span>
+                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Member perks grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-200/80 dark:border-neutral-800">
@@ -109,25 +154,49 @@ function PrihlaseniContent() {
 
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-200/80 dark:border-neutral-800">
               <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Discord Role
+                Discord Role na Serveru
               </span>
               <p className="text-base font-extrabold text-neutral-900 dark:text-white mt-1 flex items-center gap-1.5">
-                {user.isVip ? (
+                {user.isOwner ? (
+                  <>
+                    <Crown className="h-4 w-4 text-rose-500" />
+                    <span className="text-rose-500">Owner</span>
+                  </>
+                ) : user.isAdmin ? (
+                  <>
+                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
+                    <span className="text-indigo-500">Admin</span>
+                  </>
+                ) : user.isMod ? (
+                  <>
+                    <ShieldCheck className="h-4 w-4 text-cyan-500" />
+                    <span className="text-cyan-500">Moderátor</span>
+                  </>
+                ) : user.isVip ? (
                   <>
                     <Crown className="h-4 w-4 text-amber-500" />
                     <span className="text-amber-500">VIP Zákazník</span>
                   </>
+                ) : user.roleName ? (
+                  <>
+                    <User className="h-4 w-4 text-purple-400" />
+                    <span className="text-purple-400">{user.roleName}</span>
+                  </>
                 ) : (
                   <>
                     <User className="h-4 w-4 text-neutral-400" />
-                    <span className="text-neutral-500">Bez VIP role</span>
+                    <span className="text-neutral-500">Bez role</span>
                   </>
                 )}
               </p>
               <p className="text-[11px] text-neutral-500 mt-1">
-                {user.isVip
+                {user.isOwner
+                  ? "Vlastník serveru a plný přístup do administrace"
+                  : user.isVip
                   ? "Aktivní VIP výhody a přednostní přístup"
-                  : "Role VIP nebyla na Discordu nalezena"}
+                  : user.roleName
+                  ? "Oficiální role ze serveru CzechBuy Fam"
+                  : "Bez VIP role na Discordu"}
               </p>
             </div>
 
@@ -144,6 +213,31 @@ function PrihlaseniContent() {
               </p>
             </div>
           </div>
+
+          {/* Active Discord roles badges showcase */}
+          {user.roleBadges && user.roleBadges.length > 0 && (
+            <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950/40 border border-neutral-200/80 dark:border-neutral-800">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 block mb-2">
+                Přiřazené role na Discord serveru CzechBuy Fam:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {user.roleBadges.map((rb) => (
+                  <span
+                    key={rb.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border"
+                    style={{
+                      borderColor: `${rb.color || "#5865F2"}40`,
+                      backgroundColor: `${rb.color || "#5865F2"}15`,
+                      color: rb.color || "#5865F2",
+                    }}
+                  >
+                    <span>●</span>
+                    <span>{rb.name}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Action buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -230,19 +324,35 @@ function PrihlaseniContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => testLogin("VIP_Zakaznik", true)}
-                      className="py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                      onClick={() => testLogin("hokysek", "owner")}
+                      className="py-2.5 px-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
                     >
                       <Crown className="h-3.5 w-3.5" />
-                      <span>Test s VIP rolí</span>
+                      <span>Test: Owner (@hokysek)</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => testLogin("Bezny_Uzivatel", false)}
+                      onClick={() => testLogin("VIP_Zakaznik", "vip")}
+                      className="py-2.5 px-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                    >
+                      <Crown className="h-3.5 w-3.5" />
+                      <span>Test: VIP Zákazník</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => testLogin("Moderator_CZ", "mod")}
+                      className="py-2.5 px-3 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 hover:bg-cyan-500/20 text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>Test: Moderátor</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => testLogin("Bezny_Uzivatel", "none")}
                       className="py-2.5 px-3 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition"
                     >
                       <User className="h-3.5 w-3.5" />
-                      <span>Test bez role</span>
+                      <span>Test: Bez role</span>
                     </button>
                   </div>
                 </div>

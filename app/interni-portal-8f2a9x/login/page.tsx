@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, KeyRound, Eye, EyeOff, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Lock, KeyRound, Eye, EyeOff, ShieldAlert, ArrowLeft, Crown, ShieldCheck, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useDiscordAuth } from "@/lib/discord-auth-context";
+import { DiscordIcon } from "@/components/ui/social-icons";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { user, isLoggedIn, login } = useDiscordAuth();
   const [secretKey, setSecretKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isDiscordOwner = isLoggedIn && user && (user.isOwner || user.isAdmin);
+
+  useEffect(() => {
+    // If already authenticated as Discord Owner, redirect directly to admin dashboard
+    if (isDiscordOwner) {
+      router.push("/interni-portal-8f2a9x/sprava");
+    }
+  }, [isDiscordOwner, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +90,49 @@ export default function AdminLoginPage() {
               Přístup je vyhrazen pouze autorizovaným správcům systému.
             </p>
           </div>
+
+          {/* Discord Owner 1-Click Access Card */}
+          {isDiscordOwner ? (
+            <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-center space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <Crown className="h-4 w-4 text-rose-500" />
+                <span className="text-xs font-bold text-rose-500 uppercase tracking-wider">
+                  Ověřený Discord Owner
+                </span>
+              </div>
+              <p className="text-xs text-neutral-300">
+                Jste přihlášen jako <strong>@{user.username}</strong> s rolí Owner. Máte plná administrátorská práva.
+              </p>
+              <Link href="/interni-portal-8f2a9x/sprava">
+                <Button className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider">
+                  <ShieldCheck className="h-4 w-4 mr-1.5" />
+                  <span>Vstoupit do administrace</span>
+                  <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => login()}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs uppercase tracking-wider transition shadow-md"
+              >
+                <DiscordIcon className="h-4 w-4" />
+                <span>Přihlásit se přes Discord (Owner / Admin)</span>
+              </button>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
+                </div>
+                <div className="relative flex justify-center text-[10px] uppercase">
+                  <span className="bg-white dark:bg-neutral-900 px-2 text-neutral-400">
+                    Nebo administrátorský klíč
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

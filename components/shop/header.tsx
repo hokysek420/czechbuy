@@ -147,12 +147,24 @@ export function Header() {
 
           {/* Action icons */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Admin Panel Quick Access for Owner / Admin */}
+            {isLoggedIn && user && (user.isOwner || user.isAdmin) && (
+              <Link
+                href="/interni-portal-8f2a9x/sprava"
+                className="hidden sm:inline-flex items-center gap-1.5 py-1.5 px-3 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 text-xs font-bold transition shadow-xs"
+                title="Vstoupit do administrace e-shopu (přístup jako Owner)"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Admin</span>
+              </Link>
+            )}
+
             {/* Discord Login / User Profile Button */}
             {isLoggedIn && user ? (
               <Link
                 href="/prihlaseni"
                 className="inline-flex items-center gap-2.5 py-1 px-3 rounded-full bg-neutral-900 dark:bg-neutral-950 text-white border border-neutral-800 hover:border-neutral-700 transition shadow-sm group"
-                title={`Přihlášen jako ${user.username} (${user.isVip ? "VIP" : "Bez role"})`}
+                title={`Přihlášen jako ${user.username} (${user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")})`}
               >
                 <div className="relative shrink-0">
                   <img
@@ -168,10 +180,20 @@ export function Header() {
                   </span>
                   <span
                     className={`text-[10px] sm:text-[11px] font-medium leading-none mt-0.5 truncate ${
-                      user.isVip ? "text-amber-400" : "text-neutral-400"
+                      user.isOwner
+                        ? "text-rose-400 font-bold"
+                        : user.isAdmin
+                        ? "text-indigo-400 font-bold"
+                        : user.isMod
+                        ? "text-cyan-400 font-semibold"
+                        : user.isVip
+                        ? "text-amber-400 font-semibold"
+                        : user.roleName
+                        ? "text-purple-400 font-medium"
+                        : "text-neutral-400 font-normal"
                     }`}
                   >
-                    {user.isVip ? "VIP" : "Bez role"}
+                    {user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")}
                   </span>
                 </div>
               </Link>
@@ -245,10 +267,20 @@ export function Header() {
                   </p>
                   <p
                     className={`text-xs font-medium mt-0.5 ${
-                      user.isVip ? "text-amber-400" : "text-neutral-400"
+                      user.isOwner
+                        ? "text-rose-400 font-bold"
+                        : user.isAdmin
+                        ? "text-indigo-400 font-bold"
+                        : user.isMod
+                        ? "text-cyan-400 font-semibold"
+                        : user.isVip
+                        ? "text-amber-400 font-semibold"
+                        : user.roleName
+                        ? "text-purple-400 font-medium"
+                        : "text-neutral-400 font-normal"
                     }`}
                   >
-                    {user.isVip ? "VIP" : "Bez role"}
+                    {user.roleName || (user.isOwner ? "Owner" : user.isVip ? "VIP" : "Bez role")}
                   </p>
                 </div>
                 <span className="text-xs font-semibold text-neutral-400">Můj profil →</span>
@@ -264,6 +296,23 @@ export function Header() {
               </Link>
             )}
           </div>
+
+          {/* Mobile Admin Link if Owner/Admin */}
+          {isLoggedIn && user && (user.isOwner || user.isAdmin) && (
+            <div className="pb-3 border-b border-neutral-100 dark:border-neutral-800">
+              <Link
+                href="/interni-portal-8f2a9x/sprava"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-500 font-bold text-xs uppercase tracking-wider"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-rose-500" />
+                  <span>Správa e-shopu (Admin Panel)</span>
+                </div>
+                <span>→</span>
+              </Link>
+            </div>
+          )}
 
           <div className="flex flex-col space-y-3">
             <Link

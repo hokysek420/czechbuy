@@ -65,8 +65,8 @@ export async function GET(request: Request) {
 
     const rawUser = await userResponse.json();
 
-    // 3. Check real-time Discord Guild Member & VIP role status
-    const vipStatus = await fetchGuildMemberVipStatus(rawUser.id);
+    // 3. Check real-time Discord Guild Member & All role statuses (Owner, Admin, Mod, VIP, Člen)
+    const roleStatus = await fetchGuildMemberVipStatus(rawUser.id);
 
     const discordUser: DiscordUser = {
       id: rawUser.id,
@@ -81,21 +81,48 @@ export async function GET(request: Request) {
       }),
       email: rawUser.email || null,
       verified: Boolean(rawUser.verified),
-      isCzechBuyFam: vipStatus.isMember,
-      isVip: vipStatus.isVip,
-      roleName: vipStatus.roleName,
-      roles: vipStatus.roles,
+      isCzechBuyFam: roleStatus.isMember,
+      isVip: roleStatus.isVip,
+      isOwner: roleStatus.isOwner,
+      isAdmin: roleStatus.isAdmin,
+      isMod: roleStatus.isMod,
+      roleName: roleStatus.roleName,
+      roleColor: roleStatus.roleColor,
+      roles: roleStatus.roles,
+      roleBadges: roleStatus.roleBadges,
       joinedAt: new Date().toISOString(),
     };
 
     const response = NextResponse.redirect(`${baseUrl}/prihlaseni?success=1`);
 
-    // Set cookie for 30 days
+    // Set user cookie for 30 days
     response.cookies.set(DISCORD_USER_COOKIE, JSON.stringify(discordUser), {
       path: "/",
       maxAge: 30 * 24 * 60 * 60,
       sameSite: "lax",
     });
+
+    // If user is Owner or Admin on Discord, also grant immediate Admin Panel access
+    if (roleStatus.isOwner || roleStatus.isAdmin) {
+      response.cookies.set("czechbuy_admin_session", "authenticated_session_token", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+      response.cookies.set("czechbuy_admin_token", "authenticated_session_token", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: true,
+      });
+      response.cookies.set("czechbuy_admin_active", "true", {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+        httpOnly: false,
+      });
+    }
 
     return response;
   } catch (err: any) {
