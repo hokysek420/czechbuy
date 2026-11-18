@@ -61,10 +61,10 @@ export async function sendDiscordOrderNotification(
   };
 
   const paymentLabels: Record<string, string> = {
-    karta: "Platba kartou online",
-    apple_pay: "Apple Pay",
-    dobirka: "Dobírka při převzetí",
-    prevod: "Bankovní převod",
+    karta: "💳 Platba kartou online (Autorizováno 3D Secure)",
+    apple_pay: "📱 Apple Pay / Google Pay (Biometricky autorizováno)",
+    dobirka: "📦 Dobírka při převzetí (+39 Kč)",
+    prevod: "📲 Okamžitá platba QR kódem (SPAYD)",
   };
 
   const shippingText = shippingLabels[order.shippingMethod] || order.shippingMethod;

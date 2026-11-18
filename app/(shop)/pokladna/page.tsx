@@ -23,6 +23,7 @@ import { formatPrice } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ShippingMethod, PaymentMethod, Order } from "@/types";
 import { getInitialOrders, saveOrders } from "@/lib/admin-store";
+import { CustomPaymentModal } from "@/components/shop/custom-payment-modal";
 import { z } from "zod";
 
 const checkoutSchema = z.object({
@@ -95,6 +96,8 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("karta");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<Order | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Pricing calculations
   const FREE_SHIPPING_LIMIT = 2000;
@@ -132,6 +135,26 @@ export default function CheckoutPage() {
         return copy;
       });
     }
+  };
+
+  const finalizeOrder = (orderToSave: Order) => {
+    const currentOrders = getInitialOrders();
+    saveOrders([orderToSave, ...currentOrders]);
+
+    try {
+      fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderToSave),
+      }).catch((err) => console.warn("[Checkout] Discord webhook fetch error:", err));
+    } catch (err) {
+      console.warn("[Checkout] Discord webhook trigger error:", err);
+    }
+
+    setConfirmedOrder(orderToSave);
+    clearCart();
+    setIsPaymentModalOpen(false);
+    setPendingOrder(null);
   };
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
@@ -181,24 +204,15 @@ export default function CheckoutPage() {
         status: "nova",
       };
 
-      // Persist to admin orders store
-      const currentOrders = getInitialOrders();
-      saveOrders([newOrder, ...currentOrders]);
-
-      // Dispatch Discord live order webhook via server API
-      try {
-        fetch("/api/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newOrder),
-        }).catch((err) => console.warn("[Checkout] Discord webhook fetch error:", err));
-      } catch (err) {
-        console.warn("[Checkout] Discord webhook trigger error:", err);
+      // If online payment (card, apple pay, or qr transfer) is selected, open interactive payment gateway
+      if (paymentMethod === "karta" || paymentMethod === "apple_pay" || paymentMethod === "prevod") {
+        setPendingOrder(newOrder);
+        setIsPaymentModalOpen(true);
+        return;
       }
 
-      // Set confirmed order and clear user's cart
-      setConfirmedOrder(newOrder);
-      clearCart();
+      // For Dobírka (Cash on Delivery), finalize immediately
+      finalizeOrder(newOrder);
     } finally {
       setIsSubmitting(false);
     }
@@ -887,6 +901,16 @@ export default function CheckoutPage() {
           </div>
         </div>
       </form>
+
+      {/* Interactive Custom Payment Gateway Modal */}
+      {pendingOrder && (
+        <CustomPaymentModal
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          order={pendingOrder}
+          onPaymentSuccess={(paidOrder) => finalizeOrder(paidOrder)}
+        />
+      )}
     </div>
   );
 }
